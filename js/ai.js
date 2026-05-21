@@ -4,8 +4,8 @@
 // =============================================
 
 // 🔴 APNI GEMINI API KEY YAHAN LAGAO
-const GEMINI_API_KEY = "AIzaSyBlOwi71dheWwZ7YttUlkg9dvo0wAYXbeg"; 
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyBlOwi71dheWwZ7YttUlkg9dvo0wAYXbeg";
+const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"; 
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=YOUR_GEMINI_API_KEY";
 let history = [];
 
 // ── ASK AI (with conversation context) ───────────────────────────────────────
