@@ -2,13 +2,6 @@
 
 > JEE • NEET • NCERT ke liye ek smart study platform — AI quizzes, real-time chat, group study rooms, aur past papers sab ek jagah!
 
-![StudySync Banner](https://img.shields.io/badge/StudySync-AI%20Study%20Platform-6C4EFF?style=for-the-badge)
-![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%7C%20Auth%20%7C%20Storage-FFCA28?style=for-the-badge&logo=firebase)
-![Gemini AI](https://img.shields.io/badge/Gemini%20AI-2.5%20Flash-4285F4?style=for-the-badge&logo=google)
-![License](https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge)
-
----
-
 ## ✨ Features
 
 | Feature | Description |
