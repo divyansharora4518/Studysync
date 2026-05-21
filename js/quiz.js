@@ -10,8 +10,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // 🔴 APNI GEMINI API KEY YAHAN LAGAO
-const GEMINI_API_KEY = "AIzaSyBlOwi71dheWwZ7YttUlkg9dvo0wAYXbeg"; // ⚠️ aistudio.google.com se API key lo
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyBlOwi71dheWwZ7YttUlkg9dvo0wAYXbeg";
+const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"; // ⚠️ aistudio.google.com se API key lo
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=YOUR_GEMINI_API_KEY";
 // ── GENERATE QUIZ from Gemini ─────────────────────────────────────────────────
 export async function generateQuiz({ subject, category, language, numQuestions = 5 }) {
   const lang = language === "hindi" ? "Hindi" : "English";
