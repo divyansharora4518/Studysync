@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Login — StudySync</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<style>
+.auth-page { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; background: radial-gradient(ellipse 80% 70% at 60% 30%, rgba(79,195,247,0.18) 0%, transparent 70%), radial-gradient(ellipse 60% 60% at 20% 80%, rgba(108,78,255,0.15) 0%, transparent 70%), var(--bg); }
+.auth-card { background:white; border-radius:var(--radius-lg); padding:48px 44px; max-width:440px; width:100%; box-shadow:var(--shadow-lg); border:1.5px solid var(--border); }
+.auth-logo { display:flex; align-items:center; gap:10px; margin-bottom:32px; }
+.auth-logo-icon { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg,var(--violet),var(--sky)); display:flex; align-items:center; justify-content:center; font-size:1.3rem; }
+.auth-logo-text { font-family:'Sora',sans-serif; font-weight:800; font-size:1.4rem; color:var(--violet); }
+.auth-title { font-size:1.6rem; margin-bottom:6px; }
+.auth-sub { color:var(--gray); font-size:0.92rem; margin-bottom:32px; }
+.auth-divider { text-align:center; color:var(--gray); font-size:0.82rem; margin:20px 0; position:relative; }
+.auth-divider::before,.auth-divider::after { content:''; position:absolute; top:50%; width:42%; height:1px; background:var(--gray-light); }
+.auth-divider::before{left:0} .auth-divider::after{right:0}
+.auth-footer { text-align:center; margin-top:20px; font-size:0.88rem; color:var(--gray); }
+.auth-footer a { color:var(--violet); font-weight:700; }
+.error-msg { background:#FEE2E2; color:#DC2626; border-radius:8px; padding:10px 14px; font-size:0.88rem; margin-bottom:16px; display:none; }
+.input-icon-wrap { position:relative; }
+.input-icon-wrap .form-input { padding-left:42px; }
+.input-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:1.1rem; }
+.eye-btn { position:absolute; right:14px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; }
+</style>
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">📚</div>
+      <div class="auth-logo-text">StudySync</div>
+    </div>
+    <h2 class="auth-title">Welcome Back! 👋</h2>
+    <p class="auth-sub">Apne study group mein wapas aa jao</p>
+
+    <div class="error-msg" id="errorMsg">❌ <span id="errorText"></span></div>
+
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <div class="input-icon-wrap">
+        <span class="input-icon">📧</span>
+        <input type="email" id="email" class="form-input" placeholder="apna@email.com"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div class="input-icon-wrap">
+        <span class="input-icon">🔒</span>
+        <input type="password" id="password" class="form-input" placeholder="••••••••"/>
+        <button class="eye-btn" onclick="togglePass()" id="eyeBtn">👁️</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-full btn-lg" onclick="handleLogin()" id="loginBtn">
+      Login →
+    </button>
+
+    <div class="auth-divider">ya</div>
+
+    <div class="auth-footer">
+      Naya account? <a href="register.html">Register karo</a>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { loginUser, redirectIfLoggedIn } from "../js/auth.js";
+redirectIfLoggedIn("../dashboard/dashboard.html");
+
+window.handleLogin = async function() {
+  const email    = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const btn      = document.getElementById("loginBtn");
+  const errDiv   = document.getElementById("errorMsg");
+  const errText  = document.getElementById("errorText");
+
+  if (!email || !password) { showError("Email aur password dono bharo!"); return; }
+  btn.textContent = "Logging in..."; btn.disabled = true;
+
+  const res = await loginUser(email, password);
+  if (res.success) {
+    window.location.href = "../dashboard/dashboard.html";
+  } else {
+    showError(res.error);
+    btn.textContent = "Login →"; btn.disabled = false;
+  }
+};
+
+function showError(msg) {
+  const d = document.getElementById("errorMsg");
+  document.getElementById("errorText").textContent = msg;
+  d.style.display = "block";
+}
+
+window.togglePass = function() {
+  const p = document.getElementById("password");
+  const b = document.getElementById("eyeBtn");
+  p.type  = p.type === "password" ? "text" : "password";
+  b.textContent = p.type === "password" ? "👁️" : "🙈";
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>AI Chat — StudySync</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+
+  <!-- ── Markdown Parser ── -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+
+  <!-- ── KaTeX: LaTeX Math Renderer ── -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+
+  <style>
+    /* ── Page shell ── */
+    body { overflow: hidden; background: var(--bg); }
+    .ai-page { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ── Top bar ── */
+    .ai-topbar {
+      height: 64px; background: var(--bg-card);
+      border-bottom: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+    }
+    .ai-topbar-left { display: flex; align-items: center; gap: 14px; }
+    .ai-topbar-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; box-shadow: 0 4px 12px rgba(79,70,229,.3);
+    }
+    .ai-topbar-title { font-family: var(--font-display); font-weight: 700; font-size: 1rem; }
+    .ai-topbar-sub   { font-size: .74rem; color: var(--text-muted); margin-top: 1px; }
+
+    /* ── Chat area ── */
+    .ai-chat-area {
+      flex: 1; overflow-y: auto; padding: 24px 5vw;
+      display: flex; flex-direction: column; gap: 18px;
+      scroll-behavior: smooth;
+    }
+
+    /* ── Message bubbles ── */
+    .ai-msg {
+      display: flex; gap: 10px; align-items: flex-start;
+      animation: fadeUp .3s cubic-bezier(.16,1,.3,1);
+    }
+    .ai-msg.user-msg { flex-direction: row-reverse; }
+
+    .ai-avatar {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff;
+    }
+    .user-msg .ai-avatar {
+      background: linear-gradient(135deg, var(--accent), #0891B2);
+    }
+
+    .ai-bubble {
+      max-width: min(72%, 680px);
+      padding: 14px 18px;
+      border-radius: var(--radius-lg);
+      font-size: .92rem; line-height: 1.7;
+      border: 1px solid var(--border);
+    }
+    .ai-msg:not(.user-msg) .ai-bubble {
+      background: var(--bg-card);
+      border-bottom-left-radius: 4px;
+    }
+    .user-msg .ai-bubble {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff; border-color: transparent;
+      border-bottom-right-radius: 4px;
+    }
+
+    /* ── Rendered Markdown inside AI bubble ── */
+    .ai-bubble-content h1,
+    .ai-bubble-content h2,
+    .ai-bubble-content h3 {
+      font-family: var(--font-display); font-weight: 700;
+      margin: 14px 0 6px; color: var(--primary); line-height: 1.3;
+    }
+    .ai-bubble-content h1 { font-size: 1.15rem; }
+    .ai-bubble-content h2 { font-size: 1.05rem; }
+    .ai-bubble-content h3 { font-size: .97rem; color: var(--text-primary); }
+
+    .ai-bubble-content p { margin: 6px 0; }
+
+    .ai-bubble-content strong { font-weight: 700; color: var(--primary-dark); }
+    .user-msg .ai-bubble-content strong { color: #fff; }
+
+    .ai-bubble-content em { font-style: italic; color: var(--text-secondary); }
+
+    .ai-bubble-content ul,
+    .ai-bubble-content ol {
+      padding-left: 20px; margin: 8px 0; display: flex; flex-direction: column; gap: 4px;
+    }
+    .ai-bubble-content ul { list-style: disc; }
+    .ai-bubble-content ol { list-style: decimal; }
+    .ai-bubble-content li { margin: 0; line-height: 1.6; }
+
+    /* Code blocks */
+    .ai-bubble-content code {
+      font-family: var(--font-mono); font-size: .84rem;
+      background: rgba(79,70,229,.1); color: var(--primary-dark);
+      padding: 2px 6px; border-radius: 5px;
+    }
+    .ai-bubble-content pre {
+      background: #0F172A; color: #E2E8F0;
+      padding: 14px 18px; border-radius: var(--radius-md);
+      overflow-x: auto; margin: 10px 0;
+    }
+    .ai-bubble-content pre code {
+      background: none; color: inherit; padding: 0; font-size: .85rem;
+    }
+    .user-msg .ai-bubble-content code { background: rgba(255,255,255,.2); color: #fff; }
+
+    /* Blockquote */
+    .ai-bubble-content blockquote {
+      border-left: 3px solid var(--primary); padding-left: 14px;
+      color: var(--text-secondary); margin: 8px 0; font-style: italic;
+    }
+
+    /* Tables */
+    .ai-bubble-content table {
+      border-collapse: collapse; width: 100%; margin: 10px 0; font-size: .85rem;
+    }
+    .ai-bubble-content th {
+      background: var(--bg-subtle); padding: 8px 12px;
+      border: 1px solid var(--border); font-weight: 700; text-align: left;
+    }
+    .ai-bubble-content td {
+      padding: 7px 12px; border: 1px solid var(--border);
+    }
+    .ai-bubble-content tr:nth-child(even) td { background: rgba(79,70,229,.03); }
+
+    /* KaTeX math display */
+    .ai-bubble-content .katex-display {
+      margin: 12px 0; overflow-x: auto;
+      padding: 10px 14px;
+      background: var(--bg-subtle); border-radius: var(--radius-sm);
+      border-left: 3px solid var(--primary);
+    }
+    .ai-bubble-content .katex { font-size: 1rem; }
+
+    /* Horizontal rule */
+    .ai-bubble-content hr {
+      border: none; border-top: 1.5px solid var(--border); margin: 12px 0;
+    }
+
+    /* ── Typing dots ── */
+    .typing-dots { display: flex; gap: 5px; align-items: center; padding: 4px 0; }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--primary);
+      animation: bounce 1.2s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: .2s; }
+    .dot:nth-child(3) { animation-delay: .4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40%            { transform: translateY(-8px); }
+    }
+
+    /* ── Welcome screen ── */
+    .welcome-area { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+    .welcome-icon  { font-size: 3rem; margin-bottom: 16px; display: block; }
+    .welcome-title {
+      font-family: var(--font-display); font-weight: 700; font-size: 1.3rem;
+      color: var(--text-primary); margin-bottom: 8px;
+    }
+    .welcome-sub { font-size: .93rem; max-width: 400px; margin: 0 auto 28px; }
+    .suggestion-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      max-width: 520px; margin: 0 auto;
+    }
+    .suggestion-btn {
+      padding: 12px 16px; border-radius: var(--radius-md);
+      border: 1.5px solid var(--border); background: var(--bg-card);
+      font-size: .85rem; font-weight: 600; cursor: pointer; text-align: left;
+      transition: var(--transition); color: var(--text-primary);
+      font-family: var(--font-body);
+    }
+    .suggestion-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-subtle); }
+
+    /* ── Input area ── */
+    .ai-input-area {
+      background: var(--bg-card);
+      border-top: 1.5px solid var(--border);
+      padding: 12px 5vw 16px;
+      flex-shrink: 0;
+    }
+    .quick-topics { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .qt-chip {
+      padding: 5px 13px; border-radius: var(--radius-full);
+      border: 1.5px solid var(--border); background: var(--bg-card);
+      font-size: .78rem; font-weight: 700; cursor: pointer;
+      transition: var(--transition); color: var(--text-secondary);
+    }
+    .qt-chip:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-subtle); }
+
+    .ai-input-row { display: flex; gap: 10px; align-items: flex-end; }
+    .ai-textarea {
+      flex: 1; padding: 12px 18px;
+      border: 2px solid var(--border); border-radius: var(--radius-lg);
+      font-family: var(--font-body); font-size: .95rem;
+      outline: none; resize: none; max-height: 120px;
+      transition: var(--transition); background: var(--bg);
+      color: var(--text-primary);
+    }
+    .ai-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79,70,229,.1); }
+    .ai-textarea::placeholder { color: var(--text-muted); }
+
+    .ai-send-btn {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border: none; cursor: pointer; font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(79,70,229,.4);
+      flex-shrink: 0; transition: var(--transition); color: #fff;
+    }
+    .ai-send-btn:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(79,70,229,.5); }
+    .ai-send-btn:disabled { opacity: .5; transform: none; cursor: not-allowed; }
+
+    /* Lang select */
+    .lang-select {
+      padding: 6px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      font-size: .82rem; font-family: var(--font-body);
+      background: var(--bg-card); color: var(--text-primary);
+      cursor: pointer; outline: none; transition: var(--transition);
+    }
+    .lang-select:focus { border-color: var(--primary); }
+
+    /* Scrollbar */
+    .ai-chat-area::-webkit-scrollbar { width: 5px; }
+    .ai-chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    @media (max-width: 600px) {
+      .suggestion-grid { grid-template-columns: 1fr; }
+      .ai-bubble { max-width: 88%; }
+    }
+  </style>
+</head>
+<body>
+<div class="ai-page">
+
+  <!-- ── Top Bar ── -->
+  <div class="ai-topbar">
+    <div class="ai-topbar-left">
+      <button class="btn btn-ghost btn-sm" onclick="history.back()">← Back</button>
+      <div class="ai-topbar-icon">🤖</div>
+      <div>
+        <div class="ai-topbar-title">StudySync AI</div>
+        <div class="ai-topbar-sub">AI-Powered Tutor — Doubts, Topics, Solutions</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-ghost btn-sm" onclick="clearChat()">🗑️ Clear</button>
+      <select id="langSelect" class="lang-select">
+        <option value="english">🇬🇧 English</option>
+        <option value="hindi">🇮🇳 Hindi</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ── Chat Messages Area ── -->
+  <div class="ai-chat-area" id="chatArea">
+    <div class="welcome-area" id="welcomeArea">
+      <span class="welcome-icon">🤖</span>
+      <h2 class="welcome-title">Hello! I'm StudySync AI 👋</h2>
+      <p class="welcome-sub">Ask me anything — clear doubts, understand topics, solve problems, or get formulas explained. Available in English and Hindi!</p>
+      <div class="suggestion-grid">
+        <button class="suggestion-btn" onclick="quickAsk('Explain Newton\'s laws of motion with examples')">⚡ Newton's Laws of Motion</button>
+        <button class="suggestion-btn" onclick="quickAsk('Explain photosynthesis step by step with equation')">🌿 Photosynthesis explain karo</button>
+        <button class="suggestion-btn" onclick="quickAsk('How to score high in JEE Mains? Give study tips')">🎯 JEE Mains tips</button>
+        <button class="suggestion-btn" onclick="quickAsk('Explain types of chemical bonding with examples')">⚗️ Chemical Bonding</button>
+        <button class="suggestion-btn" onclick="quickAsk('Explain integration formulas with solved examples')">📐 Integration Formulas</button>
+        <button class="suggestion-btn" onclick="quickAsk('What are the most important Biology topics for NEET?')">🧬 NEET Biology Topics</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Input Area ── -->
+  <div class="ai-input-area">
+    <div class="quick-topics">
+      <span style="font-size:.73rem;font-weight:700;color:var(--text-muted);margin-right:4px;line-height:26px;">Quick:</span>
+      <span class="qt-chip" onclick="quickAsk('Explain this concept clearly with examples')">📖 Explain Topic</span>
+      <span class="qt-chip" onclick="quickAsk('Give me a short summary of this topic')">📝 Summary</span>
+      <span class="qt-chip" onclick="quickAsk('What is the formula for this? Show with derivation')">🔢 Formula</span>
+      <span class="qt-chip" onclick="quickAsk('Explain with a real-life example')">💡 Example</span>
+      <span class="qt-chip" onclick="quickAsk('Solve this problem step by step')">🧮 Solve Step-by-Step</span>
+    </div>
+    <div class="ai-input-row">
+      <textarea
+        class="ai-textarea"
+        id="aiInput"
+        rows="1"
+        placeholder="Ask any question — doubt, topic, formula, problem..."
+        onkeydown="handleKey(event)"
+        oninput="autoResize(this)"
+      ></textarea>
+      <button class="ai-send-btn" onclick="sendToAI()" id="sendBtn" aria-label="Send">➤</button>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { askAI, resetChat } from "../js/ai.js";
+
+/* ──────────────────────────────────────────
+   MARKDOWN + LATEX RENDERER
+   Uses: marked.js  +  KaTeX auto-render
+   ────────────────────────────────────────── */
+
+// Configure marked for safe, clean HTML output
+marked.setOptions({
+  breaks: true,       // newline → <br>
+  gfm: true,          // GitHub-flavored Markdown (tables, strikethrough)
+  headerIds: false,
+  mangle: false,
+});
+
+/**
+ * Renders a raw AI text string into formatted HTML.
+ * Handles: Markdown headings, bold, italic, lists, code, tables
+ *          KaTeX inline ($...$) and display ($$...$$) math
+ */
+function renderMarkdown(rawText) {
+  // 1. Protect LaTeX blocks from being mangled by marked
+  //    Replace $$...$$ and $...$ with placeholders
+  const mathBlocks   = [];
+  const mathInlines  = [];
+
+  let text = rawText;
+
+  // Display math: $$...$$
+  text = text.replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) => {
+    const idx = mathBlocks.length;
+    mathBlocks.push(tex);
+    return `MATHBLOCK_${idx}_END`;
+  });
+
+  // Inline math: $...$  (not $$ - already replaced)
+  text = text.replace(/\$([^\n$]+?)\$/g, (_, tex) => {
+    const idx = mathInlines.length;
+    mathInlines.push(tex);
+    return `MATHINLINE_${idx}_END`;
+  });
+
+  // 2. Parse Markdown → HTML
+  let html = marked.parse(text);
+
+  // 3. Restore and render display math
+  html = html.replace(/MATHBLOCK_(\d+)_END/g, (_, idx) => {
+    try {
+      return `<div class="katex-display">${katex.renderToString(mathBlocks[idx], { displayMode: true, throwOnError: false })}</div>`;
+    } catch {
+      return `<code class="math-fallback">${escHtml(mathBlocks[idx])}</code>`;
+    }
+  });
+
+  // 4. Restore and render inline math
+  html = html.replace(/MATHINLINE_(\d+)_END/g, (_, idx) => {
+    try {
+      return katex.renderToString(mathInlines[idx], { displayMode: false, throwOnError: false });
+    } catch {
+      return `<code>${escHtml(mathInlines[idx])}</code>`;
+    }
+  });
+
+  return html;
+}
+
+/* ──────────────────────────────────────────
+   CHAT LOGIC
+   ────────────────────────────────────────── */
+const chatArea = document.getElementById("chatArea");
+let isThinking = false;
+
+window.sendToAI = async function() {
+  const input = document.getElementById("aiInput");
+  const text  = input.value.trim();
+  if (!text || isThinking) return;
+  input.value = "";
+  autoResize(input);
+  await processMessage(text);
+};
+
+window.quickAsk = async function(text) {
+  await processMessage(text);
+};
+
+async function processMessage(text) {
+  hideWelcome();
+  isThinking = true;
+
+  const sendBtn = document.getElementById("sendBtn");
+  sendBtn.disabled = true;
+
+  // Show user message
+  appendBubble("user", text);
+
+  // Show typing indicator
+  const typingEl = appendTyping();
+  chatArea.scrollTop = chatArea.scrollHeight;
+
+  // Build system prompt based on selected language
+  const lang   = document.getElementById("langSelect").value;
+  const langInstruction = lang === "hindi"
+    ? "Respond in clear Hindi or Hinglish (Hindi + English mix). Use English for technical terms and formulas."
+    : "Respond in clear, simple English.";
+
+  const sysPmt = `You are StudySync AI, a friendly and expert tutor for Indian students preparing for JEE, NEET, and NCERT board exams.
+
+${langInstruction}
+
+FORMATTING RULES (very important):
+- Use proper Markdown formatting in every response.
+- Use ## for main headings, ### for sub-headings.
+- Use **bold** for important terms and key concepts.
+- Use numbered lists (1. 2. 3.) for steps and ordered content.
+- Use bullet lists (- item) for features, points, and lists.
+- Write ALL mathematical equations and formulas using LaTeX syntax:
+  - Inline math: $formula$ — example: The formula is $E = mc^2$
+  - Display/block math: $$formula$$ — example: $$\\frac{d}{dx}(x^n) = nx^{n-1}$$
+- Use code blocks for chemical equations or programming code.
+- Use tables (Markdown table syntax) when comparing multiple items.
+- Be step-by-step, clear, and encouraging.
+- Always end with a tip or encouragement for the student.`;
+
+  const reply = await askAI(text, sysPmt);
+
+  typingEl.remove();
+  appendBubble("ai", reply);
+  chatArea.scrollTop = chatArea.scrollHeight;
+
+  isThinking = false;
+  sendBtn.disabled = false;
+}
+
+function appendBubble(role, text) {
+  const isUser = role === "user";
+  const el     = document.createElement("div");
+  el.className = `ai-msg${isUser ? " user-msg" : ""}`;
+
+  const avatarIcon = isUser ? "👤" : "🤖";
+  const contentHTML = isUser
+    ? `<div class="ai-bubble-content">${escHtml(text).replace(/\n/g, "<br>")}</div>`
+    : `<div class="ai-bubble-content">${renderMarkdown(text)}</div>`;
+
+  el.innerHTML = `
+    ${!isUser ? `<div class="ai-avatar">${avatarIcon}</div>` : ""}
+    <div class="ai-bubble">${contentHTML}</div>
+    ${isUser  ? `<div class="ai-avatar">${avatarIcon}</div>` : ""}
+  `;
+
+  chatArea.appendChild(el);
+  return el;
+}
+
+function appendTyping() {
+  const el = document.createElement("div");
+  el.className = "ai-msg";
+  el.innerHTML = `
+    <div class="ai-avatar">🤖</div>
+    <div class="ai-bubble">
+      <div class="typing-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+  `;
+  chatArea.appendChild(el);
+  return el;
+}
+
+function hideWelcome() {
+  const w = document.getElementById("welcomeArea");
+  if (w) w.style.display = "none";
+}
+
+window.clearChat = function() {
+  resetChat();
+  chatArea.innerHTML = `
+    <div class="welcome-area" id="welcomeArea">
+      <span class="welcome-icon">🗑️</span>
+      <h2 class="welcome-title">Chat Cleared!</h2>
+      <p class="welcome-sub">Start a fresh conversation. Ask me anything!</p>
+    </div>`;
+};
+
+window.handleKey = function(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendToAI();
+  }
+};
+
+window.autoResize = function(el) {
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 120) + "px";
+};
+
+function escHtml(s) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+</script>
+</body>
+</html>

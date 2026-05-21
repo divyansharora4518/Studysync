@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Chat — StudySync</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<style>
+body { margin:0; overflow:hidden; }
+.chat-page { display:flex; flex-direction:column; height:100vh; background:#F7F5FF; }
+.chat-topbar { height:66px; background:white; border-bottom:1.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 20px; flex-shrink:0; }
+.chat-user-info { display:flex; align-items:center; gap:12px; }
+.chat-user-name { font-family:'Sora',sans-serif; font-weight:700; font-size:1rem; }
+.chat-user-sub { font-size:0.75rem; color:var(--gray); }
+.chat-actions { display:flex; gap:8px; }
+.messages-area { flex:1; overflow-y:auto; padding:20px 5vw; display:flex; flex-direction:column; gap:10px; }
+.input-area { background:white; border-top:1.5px solid var(--border); padding:14px 5vw; display:flex; gap:10px; align-items:center; flex-shrink:0; }
+.msg-input { flex:1; padding:12px 18px; border:2px solid var(--gray-light); border-radius:50px; font-family:'Nunito',sans-serif; font-size:0.95rem; outline:none; transition:border-color 0.2s; }
+.msg-input:focus { border-color:var(--violet); }
+.send-btn { width:46px; height:46px; border-radius:50%; background:linear-gradient(135deg,var(--violet),var(--violet-light)); border:none; cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(108,78,255,0.35); transition:transform 0.18s; }
+.send-btn:hover { transform:scale(1.08); }
+.attach-btn { width:40px; height:40px; border-radius:50%; border:1.5px solid var(--gray-light); background:white; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; transition:all 0.18s; }
+.attach-btn:hover { border-color:var(--violet); background:rgba(108,78,255,0.06); }
+.msg-wrap { display:flex; flex-direction:column; max-width:68%; }
+.msg-wrap.sent { align-self:flex-end; align-items:flex-end; }
+.msg-wrap.recv { align-self:flex-start; }
+.bubble { padding:11px 16px; border-radius:20px; font-size:0.93rem; line-height:1.6; word-break:break-word; }
+.sent .bubble { background:linear-gradient(135deg,var(--violet),var(--violet-light)); color:white; border-bottom-right-radius:4px; }
+.recv .bubble { background:white; border:1.5px solid var(--border); border-bottom-left-radius:4px; }
+.bubble-img { max-width:200px; border-radius:12px; cursor:pointer; }
+.bubble-file { display:flex; align-items:center; gap:8px; text-decoration:none; color:inherit; }
+.msg-time { font-size:0.68rem; color:var(--gray); margin-top:3px; }
+.sent .msg-time { text-align:right; }
+.group-btn { background:rgba(108,78,255,0.08); border:1.5px solid rgba(108,78,255,0.2); border-radius:10px; padding:8px 16px; font-weight:700; font-size:0.82rem; color:var(--violet); cursor:pointer; display:flex; align-items:center; gap:6px; text-decoration:none; }
+.group-btn:hover { background:rgba(108,78,255,0.15); }
+</style>
+</head>
+<body>
+<div class="chat-page">
+  <div class="chat-topbar">
+    <div style="display:flex;align-items:center;gap:14px">
+      <button class="btn btn-ghost btn-sm" onclick="history.back()">← Back</button>
+      <div class="chat-user-info">
+        <div class="avatar avatar-md" id="peerAvatar" style="background:linear-gradient(135deg,#6C4EFF,#4FC3F7)">U</div>
+        <div>
+          <div class="chat-user-name" id="peerName">Loading...</div>
+          <div class="chat-user-sub" id="peerSub">📍 ...</div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-actions">
+      <a href="#" id="groupRoomBtn" class="group-btn">👥 Group Room</a>
+    </div>
+  </div>
+
+  <div class="messages-area" id="messagesArea">
+    <div class="loader"><div class="spinner"></div></div>
+  </div>
+
+  <div class="input-area">
+    <input type="file" id="fileInput" style="display:none" onchange="handleFileSend(this)"/>
+    <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="File attach karo">📎</button>
+    <input type="text" class="msg-input" id="msgInput" placeholder="Message likho..." onkeydown="if(event.key==='Enter')sendMsg()"/>
+    <button class="send-btn" onclick="sendMsg()">➤</button>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db } from "../js/firebase-config.js";
+import { requireAuth } from "../js/auth.js";
+import { getChatRoomId, sendMessage, sendFile, listenToMessages } from "../js/chat.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+requireAuth("../auth/login.html");
+
+const params = new URLSearchParams(location.search);
+const peerUid = params.get("uid");
+let roomId = "";
+let myUid  = "";
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
+  myUid  = user.uid;
+  roomId = getChatRoomId(myUid, peerUid);
+
+  const snap = await getDoc(doc(db, "users", peerUid));
+  const peer = snap.data();
+  document.getElementById("peerName").textContent = peer.name;
+  document.getElementById("peerAvatar").textContent = peer.name[0].toUpperCase();
+  document.getElementById("peerSub").textContent = `📍 ${peer.location} • ${peer.subject} • ${peer.category?.toUpperCase()}`;
+  document.getElementById("groupRoomBtn").href = `group-room.html?uid=${peerUid}`;
+
+  listenToMessages(roomId, renderMessages);
+});
+
+function renderMessages(msgs) {
+  const area = document.getElementById("messagesArea");
+  if (msgs.length === 0) {
+    area.innerHTML = `<div style="text-align:center;color:var(--gray);padding:40px"><div style="font-size:2rem;margin-bottom:12px">👋</div><p>Conversation shuru karo!</p></div>`;
+    return;
+  }
+  area.innerHTML = msgs.map(m => {
+    const isSent = m.uid === myUid;
+    const time   = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : "";
+    let content = "";
+    if (m.type === "image") content = `<img src="${m.text}" class="bubble-img" onclick="window.open('${m.text}','_blank')"/>`;
+    else if (m.type === "file") content = `<a href="${m.text}" target="_blank" class="bubble-file">📎 <span>File dekho</span></a>`;
+    else content = escHtml(m.text);
+    return `<div class="msg-wrap ${isSent?"sent":"recv"}"><div class="bubble">${content}</div><div class="msg-time">${time}</div></div>`;
+  }).join("");
+  area.scrollTop = area.scrollHeight;
+}
+
+window.sendMsg = async function() {
+  const input = document.getElementById("msgInput");
+  const text  = input.value.trim();
+  if (!text) return;
+  input.value = "";
+  await sendMessage(roomId, text);
+};
+
+window.handleFileSend = async function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  await sendFile(roomId, file);
+  input.value = "";
+};
+
+function escHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+</script>
+</body>
+</html>
