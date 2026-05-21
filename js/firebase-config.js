@@ -12,13 +12,13 @@ import { getStorage }     from "https://www.gstatic.com/firebasejs/10.12.0/fireb
 // 🔴 YAHAN APNA FIREBASE CONFIG PASTE KARO
 // Firebase Console → Project Settings → Your apps → SDK setup → Config
 const firebaseConfig = {
-  apiKey: "AIzaSyDIRELnO2ZJARyJMgaxfDjLmkHwKxUaX8o",
-  authDomain: "studysync-66b1d.firebaseapp.com",
-  projectId: "studysync-66b1d",
-  storageBucket: "studysync-66b1d.firebasestorage.app",
-  messagingSenderId: "661532906619",
-  appId: "1:661532906619:web:908038c62adedb78eabede",
-  measurementId: "G-LHFT14VXQ3"
+  apiKey: "YOUR_FIREBASE_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.firebasestorage.app",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID",
+  measurementId: "YOUR_MEASUREMENT_ID"
 };
 
 const app     = initializeApp(firebaseConfig);
