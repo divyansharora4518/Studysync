@@ -2,18 +2,25 @@
 
 > JEE • NEET • NCERT ke liye ek smart study platform — AI quizzes, real-time chat, group study rooms, aur past papers sab ek jagah!
 
+![StudySync Banner](https://img.shields.io/badge/StudySync-AI%20Study%20Platform-6C4EFF?style=for-the-badge)
+![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%7C%20Auth%20%7C%20Storage-FFCA28?style=for-the-badge&logo=firebase)
+![Gemini AI](https://img.shields.io/badge/Gemini%20AI-2.5%20Flash-4285F4?style=for-the-badge&logo=google)
+![License](https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge)
+
+---
+
 ## ✨ Features
 
-| Feature | Description |
-|---|---|
-| 🧠 **AI Solo Quiz** | Gemini AI se personalized MCQ questions — JEE, NEET, NCERT ke liye |
-| 👥 **Group Quiz** | Doston ke saath real-time competitive quiz |
-| 💬 **1-on-1 Chat** | Matching students ke saath direct messaging (file/image support) |
-| 🏆 **Leaderboard** | Group quiz ke baad live score ranking |
-| 📄 **Past Papers** | JEE/NEET ke previous year questions browser mein |
-| 🤖 **AI Doubt Solver** | Quiz ke baad directly AI se doubts clear karo |
+| Feature                  | Description                                                           |
+| ------------------------ | --------------------------------------------------------------------- |
+| 🧠 **AI Solo Quiz**      | Gemini AI se personalized MCQ questions — JEE, NEET, NCERT ke liye    |
+| 👥 **Group Quiz**        | Doston ke saath real-time competitive quiz                            |
+| 💬 **1-on-1 Chat**       | Matching students ke saath direct messaging (file/image support)      |
+| 🏆 **Leaderboard**       | Group quiz ke baad live score ranking                                 |
+| 📄 **Past Papers**       | JEE/NEET ke previous year questions browser mein                      |
+| 🤖 **AI Doubt Solver**   | Quiz ke baad directly AI se doubts clear karo                         |
 | 🔍 **Smart Matchmaking** | Subject, language, aur category ke basis pe study partners milte hain |
-| 🌐 **Hindi + English** | Dono languages mein quiz aur AI responses |
+| 🌐 **Hindi + English**   | Dono languages mein quiz aur AI responses                             |
 
 ---
 
@@ -24,7 +31,7 @@
 - **Authentication** — Firebase Auth (Email/Password)
 - **File Storage** — Firebase Storage
 - **AI Engine** — Google Gemini 2.5 Flash API
-- **Hosting** — GitHub Pages / Firebase Hosting
+- **Hosting** — GitHub Pages
 
 ---
 
@@ -32,23 +39,23 @@
 
 ```
 studysync/
-├── index.html              # Landing / Home page
+├── index.html                  # Landing / Home page
 ├── css/
-│   └── style.css           # Global stylesheet
+│   └── style.css               # Global stylesheet
 ├── js/
-│   ├── firebase-config.js  # Firebase initialization
-│   ├── auth.js             # Login, Register, Auth guard
-│   ├── quiz.js             # Quiz generation (Gemini) + Firestore save
-│   ├── ai.js               # AI chat / doubt solver
-│   ├── chat.js             # 1-on-1 & group messaging
-│   └── matchmaking.js      # Smart peer matching
+│   ├── firebase-config.js      # Firebase initialization (apni keys daalo)
+│   ├── auth.js                 # Login, Register, Auth guard
+│   ├── quiz.js                 # Quiz generation (Gemini) + Firestore save
+│   ├── ai.js                   # AI chat / doubt solver
+│   ├── chat.js                 # 1-on-1 & group messaging
+│   └── matchmaking.js          # Smart peer matching
 ├── quiz/
-│   ├── solo-quiz.html      # AI solo quiz page
-│   └── quiz_feature.html   # Group quiz room
+│   ├── solo-quiz.html          # AI solo quiz page
+│   └── quiz_feature.html       # Group quiz room
 ├── chat/
-│   └── chat.html           # 1-on-1 chat UI
+│   └── chat.html               # 1-on-1 chat UI
 ├── past-paper/
-│   └── past-paper.html     # Past papers browser
+│   └── past-paper.html         # Past papers browser
 └── README.md
 ```
 
@@ -59,8 +66,8 @@ studysync/
 ### 1. Repository Clone karo
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/studysync.git
-cd studysync
+git clone https://github.com/YOUR_USERNAME/Studysync.git
+cd Studysync
 ```
 
 ### 2. Firebase Setup
@@ -72,29 +79,13 @@ cd studysync
    - **Firestore Database** → Production mode mein banao
    - **Storage** → Default rules ke saath banao
 4. Project Settings → Your apps → Web app add karo
-5. Config copy karo aur `js/firebase-config.js` mein paste karo:
-
-```javascript
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.firebasestorage.app",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-```
+5. Apna config copy karo aur `js/firebase-config.js` mein paste karo
 
 ### 3. Gemini API Key Setup
 
 1. [Google AI Studio](https://aistudio.google.com/) pe jao
 2. **Get API Key** pe click karo
-3. `js/quiz.js` aur `js/ai.js` mein apni key paste karo:
-
-```javascript
-const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY";
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=YOUR_GEMINI_API_KEY`;
-```
+3. Apni key `js/quiz.js` aur `js/ai.js` mein paste karo
 
 ### 4. Firestore Security Rules
 
@@ -127,63 +118,24 @@ service cloud.firestore {
 
 ---
 
-## 🚀 GitHub pe Deploy karna
+## 🔒 Security — Zaroori Padho
 
-### Option A — GitHub Pages (Free, Recommended)
+> ⚠️ **Apni API keys kabhi bhi directly GitHub pe mat daalo!**
 
-```bash
-# 1. Git initialize karo
-git init
-git add .
-git commit -m "Initial commit: StudySync launch 🚀"
+Is project ko clone karne ke baad:
 
-# 2. GitHub pe new repository banao (studysync naam se)
-# 3. Remote add karo
-git remote add origin https://github.com/YOUR_USERNAME/studysync.git
-git branch -M main
-git push -u origin main
+- `js/firebase-config.js` mein apna Firebase config daalo
+- `js/quiz.js` aur `js/ai.js` mein apni Gemini API key daalo
+- Yeh files `.gitignore` mein add karo taaki galti se push na ho
 
-# 4. GitHub → Settings → Pages → Source: main branch → Save
-# 5. Tera site live ho jayega:
-# https://YOUR_USERNAME.github.io/studysync/
+**`.gitignore` banao aur yeh likho:**
+
 ```
-
-### Option B — Firebase Hosting
-
-```bash
-npm install -g firebase-tools
-firebase login
-firebase init hosting
-# Public directory: . (root)
-# Single page app: No
-firebase deploy
+# Sensitive config files
+js/firebase-config.js
+js/quiz.js
+js/ai.js
 ```
-
----
-
-## 🔒 Important — API Keys Security
-
-> ⚠️ **Production mein API keys ko kabhi bhi directly HTML/JS files mein mat rakho!**
-
-Proper production setup ke liye:
-- Firebase Functions use karo Gemini API calls ke liye (server-side)
-- Environment variables ya Firebase Remote Config use karo
-- `.gitignore` mein sensitive files add karo
-
-**`.gitignore` example:**
-```
-# Agar separate config file banao toh
-config.local.js
-.env
-```
-
----
-
-## 📸 Screenshots
-
-| Solo Quiz | Group Chat | Past Papers |
-|---|---|---|
-| AI se questions milte hain | Real-time messaging | JEE/NEET papers |
 
 ---
 
@@ -207,6 +159,7 @@ MIT License — freely use, modify, distribute karo.
 
 ## 👨‍💻 Made with ❤️ for Indian Students
 
-> *"Padhai mushkil hai, lekin sahi tools ho toh aasan ho jaati hai."*
+> _"Padhai mushkil hai, lekin sahi tools ho toh aasan ho jaati hai."_
 
 **StudySync** — Akele ya saath mein, hum saath padhte hain! 🎯
+
