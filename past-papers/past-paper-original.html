@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>StudySync — Past Papers</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --violet: #6C4EFF;
+  --violet-light: #8B72FF;
+  --sky: #4FC3F7;
+  --mint: #43E8B0;
+  --coral: #FF6B8A;
+  --yellow: #FFD166;
+  --bg: #F4F2FF;
+  --white: #ffffff;
+  --dark: #1A1040;
+  --gray: #6B7280;
+  --shadow: 0 8px 32px rgba(108,78,255,0.13);
+  --correct: #22C55E;
+  --wrong: #EF4444;
+  --skipped: #94A3B8;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--dark);overflow-x:hidden;min-height:100vh}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:12px 5vw;background:rgba(244,242,255,0.93);backdrop-filter:blur(16px);border-bottom:1.5px solid rgba(108,78,255,0.1)}
+.logo{font-family:'Sora',sans-serif;font-size:1.3rem;font-weight:800;color:var(--violet);display:flex;align-items:center;gap:8px;text-decoration:none}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--violet),var(--sky));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;color:white}
+.nav-back{padding:7px 18px;border-radius:9px;border:2px solid var(--violet);background:transparent;color:var(--violet);font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;font-size:0.88rem;text-decoration:none;transition:all 0.2s}
+.nav-back:hover{background:var(--violet);color:white}
+
+/* SCREENS */
+.screen{display:none;min-height:100vh;padding:80px 5vw 40px}
+.screen.active{display:block}
+
+/* ===== SCREEN 0: LANDING / DASHBOARD ===== */
+#landingScreen{background:var(--bg)}
+.landing-hero{text-align:center;padding:40px 0 50px;position:relative}
+.landing-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 40%,rgba(108,78,255,0.12) 0%,transparent 70%);pointer-events:none}
+.landing-badge{display:inline-flex;align-items:center;gap:7px;background:white;border:1.5px solid rgba(108,78,255,0.2);border-radius:50px;padding:6px 18px;font-size:0.8rem;font-weight:700;color:var(--violet);margin-bottom:20px;box-shadow:0 2px 12px rgba(108,78,255,0.1)}
+.badge-pulse{width:8px;height:8px;background:var(--mint);border-radius:50%;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:0.7}}
+.landing-title{font-family:'Sora',sans-serif;font-size:clamp(2rem,4.5vw,3rem);font-weight:800;line-height:1.2;margin-bottom:14px}
+.landing-title .accent{color:var(--violet)}
+.landing-sub{color:var(--gray);font-size:1.05rem;max-width:520px;margin:0 auto 36px;line-height:1.7}
+
+.mode-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;max-width:750px;margin:0 auto 50px}
+.mode-card{background:white;border-radius:22px;padding:32px 28px;box-shadow:var(--shadow);border:2px solid transparent;cursor:pointer;transition:all 0.28s;text-align:left;position:relative;overflow:hidden}
+.mode-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+.mode-card.solo-card::before{background:linear-gradient(90deg,var(--violet),var(--sky))}
+.mode-card.group-card::before{background:linear-gradient(90deg,var(--coral),var(--yellow))}
+.mode-card:hover{transform:translateY(-6px);box-shadow:0 20px 50px rgba(108,78,255,0.2);border-color:rgba(108,78,255,0.2)}
+.mode-card-icon{font-size:2.8rem;margin-bottom:16px}
+.mode-card-title{font-family:'Sora',sans-serif;font-weight:800;font-size:1.3rem;margin-bottom:8px}
+.mode-card-desc{color:var(--gray);font-size:0.9rem;line-height:1.6;margin-bottom:20px}
+.mode-card-features{display:flex;flex-direction:column;gap:7px;margin-bottom:24px}
+.mcf-item{display:flex;align-items:center;gap:9px;font-size:0.85rem;font-weight:600}
+.mcf-check{width:20px;height:20px;border-radius:50%;background:#D1FAE5;color:#065F46;display:flex;align-items:center;justify-content:center;font-size:0.7rem;flex-shrink:0}
+.mode-card-btn{width:100%;padding:13px;border-radius:12px;border:none;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;font-size:1rem;transition:all 0.2s}
+.solo-btn{background:linear-gradient(135deg,var(--violet),var(--violet-light));color:white;box-shadow:0 4px 16px rgba(108,78,255,0.35)}
+.solo-btn:hover{transform:translateY(-2px)}
+.group-btn{background:linear-gradient(135deg,var(--coral),var(--yellow));color:white;box-shadow:0 4px 16px rgba(255,107,138,0.35)}
+.group-btn:hover{transform:translateY(-2px)}
+
+.landing-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:50px}
+.l-stat{background:white;border-radius:14px;padding:16px 24px;box-shadow:var(--shadow);text-align:center;border:1.5px solid rgba(108,78,255,0.08)}
+.l-stat-num{font-family:'Sora',sans-serif;font-size:1.6rem;font-weight:800;color:var(--violet)}
+.l-stat-lbl{font-size:0.75rem;color:var(--gray);font-weight:600;margin-top:3px}
+
+/* ===== SCREEN 1: PAPER SELECT ===== */
+.page-title{font-family:'Sora',sans-serif;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;margin-bottom:8px}
+.page-sub{color:var(--gray);font-size:1rem;margin-bottom:32px}
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--violet);font-weight:700;cursor:pointer;background:none;border:none;font-family:'Nunito',sans-serif;font-size:0.92rem;margin-bottom:22px;transition:opacity 0.2s}
+.back-link:hover{opacity:0.7}
+.papers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:20px}
+.paper-card{background:white;border-radius:18px;padding:24px;box-shadow:var(--shadow);border:1.5px solid rgba(108,78,255,0.1);cursor:pointer;transition:transform 0.22s,box-shadow 0.22s;position:relative;overflow:hidden}
+.paper-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--violet),var(--sky))}
+.paper-card:hover{transform:translateY(-5px);box-shadow:0 16px 40px rgba(108,78,255,0.2)}
+.paper-date{font-family:'Sora',sans-serif;font-weight:800;font-size:1.1rem;margin-bottom:6px}
+.paper-meta{font-size:0.82rem;color:var(--gray);display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.paper-tag{padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700}
+.tag-jee{background:#EDE9FE;color:#5B21B6}
+.paper-stats{display:flex;gap:14px;margin-top:12px}
+.pstat{text-align:center}
+.pstat-num{font-family:'Sora',sans-serif;font-weight:800;font-size:1.2rem;color:var(--violet)}
+.pstat-lbl{font-size:0.68rem;color:var(--gray);font-weight:600}
+.paper-start-btn{width:100%;margin-top:16px;padding:11px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--violet),var(--violet-light));color:white;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;font-size:0.95rem;transition:opacity 0.2s}
+.paper-start-btn:hover{opacity:0.85}
+
+/* GROUP SETUP */
+.group-setup{background:white;border-radius:20px;padding:36px;box-shadow:var(--shadow);max-width:500px;margin:0 auto}
+.group-setup h2{font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:6px}
+.group-setup p{color:var(--gray);margin-bottom:28px;font-size:0.93rem}
+.input-group{margin-bottom:18px}
+.input-group label{display:block;font-weight:700;font-size:0.88rem;margin-bottom:7px;color:var(--dark)}
+.input-group input,.input-group select{width:100%;padding:12px 16px;border-radius:11px;border:2px solid rgba(108,78,255,0.2);font-family:'Nunito',sans-serif;font-size:0.95rem;color:var(--dark);outline:none;transition:border-color 0.2s;background:var(--bg)}
+.input-group input:focus,.input-group select:focus{border-color:var(--violet)}
+.btn-full{width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--violet),var(--violet-light));color:white;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;font-size:1rem;margin-top:8px;transition:transform 0.18s,box-shadow 0.18s;box-shadow:0 4px 16px rgba(108,78,255,0.35)}
+.btn-full:hover{transform:translateY(-2px)}
+.btn-outline-full{width:100%;padding:12px;border-radius:12px;border:2px solid var(--violet);background:transparent;color:var(--violet);font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;font-size:0.95rem;margin-top:10px;transition:all 0.2s}
+.btn-outline-full:hover{background:var(--violet);color:white}
+.divider{text-align:center;margin:18px 0;color:var(--gray);font-size:0.88rem;position:relative}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:rgba(108,78,255,0.15)}
+.divider::before{left:0}.divider::after{right:0}
+.room-code-display{background:linear-gradient(135deg,var(--violet),var(--violet-light));color:white;border-radius:14px;padding:20px;text-align:center;margin:20px 0}
+.room-code-display .code{font-family:'Sora',sans-serif;font-size:2rem;font-weight:800;letter-spacing:6px}
+.room-code-display p{font-size:0.82rem;opacity:0.85;margin-top:4px}
+.member-list{background:var(--bg);border-radius:12px;padding:16px;margin:16px 0}
+.member-list h4{font-size:0.82rem;font-weight:700;color:var(--gray);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
+.member-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(108,78,255,0.08)}
+.member-item:last-child{border:none}
+.m-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:white}
+.m-name{font-weight:600;font-size:0.9rem}
+.m-status{font-size:0.72rem;color:var(--gray)}
+.m-host{font-size:0.68rem;font-weight:700;background:#EDE9FE;color:#5B21B6;padding:2px 8px;border-radius:20px;margin-left:auto}
+
+/* ===== SCREEN 2: EXAM ===== */
+#examScreen{padding:0;display:flex;flex-direction:column;height:100vh;padding-top:60px}
+.exam-header{background:white;border-bottom:1.5px solid rgba(108,78,255,0.1);padding:10px 5vw;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:60px;z-index:100}
+.exam-info{display:flex;flex-direction:column}
+.exam-title{font-family:'Sora',sans-serif;font-weight:800;font-size:1rem}
+.exam-sub{font-size:0.78rem;color:var(--gray)}
+.exam-progress-wrap{flex:1;max-width:300px;display:flex;flex-direction:column;gap:4px}
+.exam-progress-bar{height:8px;border-radius:10px;background:rgba(108,78,255,0.15);overflow:hidden}
+.exam-progress-fill{height:100%;background:linear-gradient(90deg,var(--violet),var(--sky));border-radius:10px;transition:width 0.4s ease}
+.exam-progress-text{font-size:0.72rem;color:var(--gray);text-align:right}
+.timer-box{background:linear-gradient(135deg,var(--violet),var(--violet-light));color:white;border-radius:12px;padding:8px 18px;display:flex;align-items:center;gap:8px;font-family:'Sora',sans-serif;font-weight:800;font-size:1.1rem}
+.timer-icon{font-size:1.1rem}
+.timer-warn{background:linear-gradient(135deg,#EF4444,#F97316) !important}
+
+.exam-body{flex:1;display:grid;grid-template-columns:1fr 280px;gap:0;overflow:hidden}
+.question-panel{overflow-y:auto;padding:24px 5vw}
+.sidebar-panel{overflow-y:auto;border-left:1.5px solid rgba(108,78,255,0.1);background:white;padding:20px}
+
+.subject-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.subj-tab{padding:7px 16px;border-radius:20px;border:2px solid rgba(108,78,255,0.2);background:transparent;color:var(--gray);font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;font-size:0.82rem;transition:all 0.2s}
+.subj-tab.active{background:var(--violet);color:white;border-color:var(--violet)}
+
+.question-card{background:white;border-radius:18px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px;border:1.5px solid rgba(108,78,255,0.08)}
+.question-card-header{background:linear-gradient(135deg,#F8F7FF,#EDE9FE);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(108,78,255,0.1)}
+.q-number{font-family:'Sora',sans-serif;font-weight:800;font-size:0.95rem;color:var(--violet)}
+.q-type-badge{font-size:0.68rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#EDE9FE;color:#5B21B6}
+.q-type-sa{background:#D1FAE5;color:#065F46}
+.question-pdf-embed{width:100%;background:#f8f8f8;border-bottom:1px solid rgba(108,78,255,0.08)}
+.pdf-placeholder{padding:20px;text-align:center}
+.pdf-placeholder .pdf-icon{font-size:2.5rem;margin-bottom:8px}
+.pdf-placeholder p{color:var(--gray);font-size:0.85rem}
+.pdf-placeholder .pdf-ref{font-weight:700;color:var(--violet);margin-top:4px;font-size:0.92rem}
+.pdf-open-btn{margin-top:12px;padding:8px 20px;border-radius:10px;border:2px solid var(--violet);background:transparent;color:var(--violet);font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;font-size:0.85rem;transition:all 0.2s}
+.pdf-open-btn:hover{background:var(--violet);color:white}
+.question-options{padding:20px}
+.option-btn{width:100%;padding:13px 18px;border-radius:12px;border:2px solid rgba(108,78,255,0.15);background:var(--bg);color:var(--dark);font-weight:600;cursor:pointer;font-family:'Nunito',sans-serif;font-size:0.95rem;text-align:left;margin-bottom:10px;display:flex;align-items:center;gap:14px;transition:all 0.2s}
+.option-btn:hover{border-color:var(--violet);background:#EDE9FE}
+.option-btn.selected{border-color:var(--violet);background:#EDE9FE;color:var(--violet)}
+.option-label{width:28px;height:28px;border-radius:50%;background:rgba(108,78,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;flex-shrink:0}
+.option-btn.selected .option-label{background:var(--violet);color:white}
+.numerical-input{width:100%;padding:14px 16px;border-radius:12px;border:2px solid rgba(108,78,255,0.2);font-family:'Nunito',sans-serif;font-size:1.1rem;font-weight:700;color:var(--dark);outline:none;transition:border-color 0.2s;text-align:center;letter-spacing:2px}
+.numerical-input:focus{border-color:var(--violet)}
+.numerical-note{font-size:0.78rem;color:var(--gray);text-align:center;margin-top:8px}
+
+.nav-buttons{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-top:8px;padding-bottom:20px}
+.nav-btn{padding:11px 24px;border-radius:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;font-size:0.95rem;transition:all 0.2s}
+.btn-prev{border:2px solid rgba(108,78,255,0.25);background:white;color:var(--dark)}
+.btn-prev:hover{border-color:var(--violet)}
+.btn-next{border:none;background:linear-gradient(135deg,var(--violet),var(--violet-light));color:white;box-shadow:0 4px 16px rgba(108,78,255,0.3)}
+.btn-next:hover{transform:translateY(-2px)}
+.btn-skip{border:2px solid rgba(108,78,255,0.15);background:transparent;color:var(--gray)}
+.btn-submit-exam{border:none;background:linear-gradient(135deg,#22C55E,#16A34A);color:white;box-shadow:0 4px 16px rgba(34,197,94,0.3)}
+.btn-submit-exam:hover{transform:translateY(-2px)}
+
+/* SIDEBAR */
+.sidebar-title{font-family:'Sora',sans-serif;font-weight:800;font-size:0.95rem;margin-bottom:14px}
+.q-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:20px}
+.q-dot{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.78rem;cursor:pointer;transition:all 0.2s;border:2px solid transparent}
+.q-dot.unattempted{background:#3D2F7A;color:#C4B5FD;border:2px solid #5B4A9E}
+.q-dot.answered{background:#16A34A;color:white;border-color:#15803D}
+.q-dot.current{outline:3px solid var(--violet);outline-offset:2px;transform:scale(1.15);background:var(--violet);color:white;border-color:var(--violet-light)}
+.q-dot.answered.current{background:#16A34A;color:white;border-color:#15803D;outline:3px solid #16A34A;outline-offset:2px;transform:scale(1.15)}
+.q-dot.skipped.current{background:#92400E;color:#FDE68A;border:2px solid #F59E0B;outline:3px solid #F59E0B;outline-offset:2px;transform:scale(1.15)}
+.q-dot.unattempted.current{background:var(--violet);color:white;border-color:var(--violet-light);outline:3px solid var(--violet);outline-offset:2px;transform:scale(1.15)}
+.q-dot.skipped{background:#92400E;color:#FDE68A;border:2px solid #F59E0B}
+.sidebar-legend{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:0.78rem;color:var(--gray)}
+.legend-dot{width:16px;height:16px;border-radius:5px}
+.ld-answered{background:#16A34A;border:1.5px solid #15803D}
+.ld-current{background:var(--violet)}
+.ld-skipped{background:#92400E;border:1.5px solid #F59E0B}
+.ld-unattempted{background:#3D2F7A;border:1.5px solid #5B4A9E}
+
+/* GROUP SIDEBAR */
+.group-members-live{margin-top:20px;border-top:1px solid rgba(108,78,255,0.1);padding-top:16px}
+.gm-title{font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray);margin-bottom:10px}
+.gm-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(108,78,255,0.06)}
+.gm-item:last-child{border:none}
+.gm-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.72rem;color:white;flex-shrink:0}
+.gm-name{font-size:0.82rem;font-weight:600;flex:1}
+.gm-progress{font-size:0.72rem;color:var(--gray)}
+
+/* ===== SCREEN 3: RESULT ===== */
+#resultScreen{padding:80px 5vw 60px}
+.result-header{text-align:center;margin-bottom:40px}
+.result-score-big{font-family:'Sora',sans-serif;font-size:clamp(3rem,8vw,5rem);font-weight:800;color:var(--violet);line-height:1}
+.result-label{font-size:1rem;color:var(--gray);margin-top:6px}
+.result-name{font-family:'Sora',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:4px}
+.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:40px}
+.result-stat{background:white;border-radius:16px;padding:22px;box-shadow:var(--shadow);border:1.5px solid rgba(108,78,255,0.08);text-align:center}
+.result-stat .rs-num{font-family:'Sora',sans-serif;font-size:2rem;font-weight:800}
+.rs-correct{color:var(--correct)}
+.rs-wrong{color:var(--wrong)}
+.rs-skipped{color:var(--skipped)}
+.rs-marks{color:var(--violet)}
+.result-stat .rs-lbl{font-size:0.8rem;color:var(--gray);font-weight:600;margin-top:4px}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:40px}
+.chart-card{background:white;border-radius:18px;padding:26px;box-shadow:var(--shadow);border:1.5px solid rgba(108,78,255,0.08)}
+.chart-card h3{font-family:'Sora',sans-serif;font-weight:800;font-size:1rem;margin-bottom:20px}
+canvas{max-width:100%}
+.subj-breakdown{display:flex;flex-direction:column;gap:10px}
+.subj-row{display:flex;align-items:center;gap:12px}
+.subj-name{font-size:0.85rem;font-weight:700;width:90px;flex-shrink:0}
+.subj-bar-wrap{flex:1;background:rgba(108,78,255,0.08);border-radius:20px;height:12px;overflow:hidden}
+.subj-bar-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--violet),var(--sky));transition:width 1s ease}
+.subj-pct{font-size:0.78rem;font-weight:700;color:var(--violet);width:38px;text-align:right}
+
+/* GROUP RESULT */
+.group-result-section{margin-bottom:40px}
+.group-result-section h2{font-family:'Sora',sans-serif;font-weight:800;font-size:1.4rem;margin-bottom:20px}
+.group-table{width:100%;border-collapse:collapse;background:white;border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+.group-table th{background:linear-gradient(135deg,var(--dark),#2D1B8E);color:white;padding:14px 18px;text-align:left;font-size:0.82rem;font-weight:700;letter-spacing:0.5px}
+.group-table td{padding:13px 18px;border-bottom:1px solid rgba(108,78,255,0.07);font-size:0.88rem}
+.group-table tr:last-child td{border:none}
+.group-table tr:hover td{background:rgba(108,78,255,0.03)}
+.rank-badge{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.82rem}
+.rank-1{background:#FFD166;color:#92400E}
+.rank-2{background:#e0e0e0;color:#444}
+.rank-3{background:#f0c08e;color:#7c4a00}
+.rank-other{background:rgba(108,78,255,0.1);color:var(--violet)}
+
+.q-review-section{margin-top:40px}
+.q-review-section h2{font-family:'Sora',sans-serif;font-weight:800;font-size:1.4rem;margin-bottom:20px}
+.review-card{background:white;border-radius:16px;padding:22px;margin-bottom:14px;box-shadow:0 3px 16px rgba(108,78,255,0.08);border:1.5px solid rgba(108,78,255,0.07);border-left:5px solid var(--skipped)}
+.review-card.correct{border-left-color:var(--correct)}
+.review-card.wrong{border-left-color:var(--wrong)}
+.review-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.review-q-num{font-weight:800;font-size:0.9rem}
+.review-status{font-size:0.75rem;font-weight:700;padding:3px 10px;border-radius:20px}
+.status-correct{background:#D1FAE5;color:#065F46}
+.status-wrong{background:#FEE2E2;color:#991B1B}
+.status-skipped{background:#F1F5F9;color:#64748B}
+.review-answer{font-size:0.85rem;color:var(--gray)}
+.review-answer span{font-weight:700;color:var(--dark)}
+.review-group-answers{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+.rga-chip{font-size:0.72rem;padding:3px 10px;border-radius:20px;border:1.5px solid rgba(108,78,255,0.15);font-weight:600}
+.rga-correct{background:#D1FAE5;border-color:#22C55E;color:#065F46}
+.rga-wrong{background:#FEE2E2;border-color:#EF4444;color:#991B1B}
+.rga-skipped{background:#F1F5F9;border-color:#CBD5E1;color:#64748B}
+
+/* RESULT ACTIONS */
+.result-actions{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:36px;padding-top:28px;border-top:1px solid rgba(108,78,255,0.1)}
+.ra-btn{padding:13px 30px;border-radius:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;font-size:0.97rem;transition:all 0.2s}
+.ra-primary{border:none;background:linear-gradient(135deg,var(--violet),var(--violet-light));color:white;box-shadow:0 4px 16px rgba(108,78,255,0.35)}
+.ra-primary:hover{transform:translateY(-2px)}
+.ra-outline{border:2px solid var(--violet);background:transparent;color:var(--violet)}
+.ra-check{border:none;background:linear-gradient(135deg,#22C55E,#16A34A);color:white;box-shadow:0 4px 16px rgba(34,197,94,0.3)}
+.ra-outline:hover{background:var(--violet);color:white}
+.ra-check:hover{transform:translateY(-2px)}
+
+/* FILTER BTNS */
+.mode-btn{padding:10px 24px;border-radius:12px;border:2px solid var(--violet);background:transparent;color:var(--violet);font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;font-size:0.95rem;transition:all 0.2s}
+.mode-btn.active,.mode-btn:hover{background:var(--violet);color:white}
+
+/* TOAST */
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:#1A1040;color:white;padding:12px 24px;border-radius:12px;font-weight:600;font-size:0.9rem;z-index:999;transition:transform 0.3s ease;box-shadow:0 8px 32px rgba(0,0,0,0.25)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:rgba(244,242,255,0.92);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.spinner{width:48px;height:48px;border:4px solid rgba(108,78,255,0.2);border-top-color:var(--violet);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:'Sora',sans-serif;font-weight:700;color:var(--violet)}
+
+/* ERROR BOX */
+.error-box{background:#FEF2F2;border:1.5px solid #FECACA;border-radius:14px;padding:20px;text-align:center;margin:20px 0}
+.error-box .error-icon{font-size:2rem;margin-bottom:10px}
+.error-box p{color:#991B1B;font-weight:600;font-size:0.92rem}
+.error-box .error-hint{color:#B45309;font-size:0.82rem;margin-top:8px;background:#FEF3C7;border-radius:8px;padding:10px}
+
+
+/* QUESTION IMAGE DISPLAY */
+.question-img-wrap{padding:16px 20px 0;text-align:center}
+.question-img-wrap img{max-width:100%;border-radius:10px;border:1px solid rgba(108,78,255,0.1)}
+.option-img{height:28px;max-width:180px;object-fit:contain;vertical-align:middle}
+.option-btn-img{display:flex;align-items:center;gap:12px}
+
+/* CHECK MODE BUTTON */
+.btn-check-mode{border:2px solid #22C55E;background:transparent;color:#22C55E;font-weight:700;font-family:'Nunito',sans-serif;font-size:0.88rem;padding:9px 18px;border-radius:11px;cursor:pointer;transition:all 0.2s}
+.btn-check-mode.active{background:#22C55E;color:white}
+.btn-check-mode:hover{background:#22C55E;color:white}
+
+/* CHECK MODE ANSWER OVERLAY */
+.check-answer-box{margin-top:14px;padding:14px 18px;border-radius:12px;border:2px solid;display:none}
+.check-answer-box.show{display:block}
+.check-answer-box.correct-ans{background:#D1FAE5;border-color:#22C55E;color:#065F46}
+.check-answer-box.wrong-ans{background:#FEE2E2;border-color:#EF4444;color:#991B1B}
+.check-answer-box.skipped-ans{background:#F1F5F9;border-color:#94A3B8;color:#475569}
+.check-ans-title{font-weight:800;font-size:0.95rem;margin-bottom:4px}
+.check-ans-detail{font-size:0.85rem}
+
+/* PAPER CARD CHECK MODE OPTION */
+.paper-mode-toggle{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.paper-mode-btn{flex:1;padding:9px;border-radius:10px;border:2px solid rgba(108,78,255,0.2);background:transparent;color:var(--gray);font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;font-size:0.82rem;transition:all 0.2s;min-width:100px}
+.paper-mode-btn.active{background:var(--violet);color:white;border-color:var(--violet)}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .exam-body{grid-template-columns:1fr;grid-template-rows:1fr auto}
+  .sidebar-panel{border-left:none;border-top:1.5px solid rgba(108,78,255,0.1)}
+  .charts-row{grid-template-columns:1fr}
+  .mode-cards{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .q-grid{grid-template-columns:repeat(6,1fr)}
+  .q-dot{width:30px;height:30px;font-size:0.7rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-icon">📚</div>
+    StudySync
+  </a>
+  <a href="index.html" class="nav-back">← Home</a>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Loading...</div>
+</div>
+
+<!-- ===== SCREEN 0: LANDING ===== -->
+<div class="screen active" id="landingScreen">
+  <div style="max-width:1100px;margin:0 auto">
+    <div class="landing-hero">
+      <div class="landing-badge"><span class="badge-pulse"></span> JEE Past Papers Available</div>
+      <h1 class="landing-title">Practice with <span class="accent">Real JEE Papers</span><br>Solo or Group</h1>
+      <p class="landing-sub">Practice real JEE papers just like the actual exam — with timer, question-by-question navigation, and detailed results with pie chart.</p>
+
+      <div class="mode-cards">
+        <div class="mode-card solo-card" onclick="goToSoloSelect()">
+          <div class="mode-card-icon">🎯</div>
+          <div class="mode-card-title">Solo Practice</div>
+          <div class="mode-card-desc">Solve papers solo to improve your speed and accuracy.</div>
+          <div class="mode-card-features">
+            <div class="mcf-item"><div class="mcf-check">✓</div> 3 ghante ka countdown timer</div>
+            <div class="mcf-item"><div class="mcf-check">✓</div> Question-by-question navigation</div>
+            <div class="mcf-item"><div class="mcf-check">✓</div> Result + Pie chart + Subject analysis</div>
+            <div class="mcf-item"><div class="mcf-check">✓</div> Har question ka review</div>
+          </div>
+          <button class="mode-card-btn solo-btn">▶ Start Solo</button>
+        </div>
+
+        <div class="mode-card group-card" onclick="goToGroupSelect()">
+          <div class="mode-card-icon">👥</div>
+          <div class="mode-card-title">Group Study</div>
+          <div class="mode-card-desc">Solve papers with friends simultaneously and compare results!</div>
+          <div class="mode-card-features">
+            <div class="mcf-item"><div class="mcf-check">✓</div> Create a room, share the code</div>
+            <div class="mcf-item"><div class="mcf-check">✓</div> Start simultaneously for everyone</div>
+            <div class="mcf-item"><div class="mcf-check">✓</div> Live member progress tracking</div>
+            <div class="mcf-item"><div class="mcf-check">✓</div> Group rankings & comparison</div>
+          </div>
+          <button class="mode-card-btn group-btn">👥 Start Group Session</button>
+        </div>
+      </div>
+
+      <div class="landing-stats">
+        <div class="l-stat"><div class="l-stat-num" id="paperCount">1</div><div class="l-stat-lbl">Papers Available</div></div>
+        <div class="l-stat"><div class="l-stat-num">90</div><div class="l-stat-lbl">Questions/Paper</div></div>
+        <div class="l-stat"><div class="l-stat-num">3hr</div><div class="l-stat-lbl">Exam Duration</div></div>
+        <div class="l-stat"><div class="l-stat-num">+4/-1</div><div class="l-stat-lbl">Marking Scheme</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 1: PAPER SELECT ===== -->
+<div class="screen" id="selectScreen">
+  <div style="max-width:1200px;margin:0 auto">
+    <button class="back-link" onclick="showScreen('landingScreen')">← Go Back</button>
+
+    <!-- SOLO SELECT -->
+    <div id="soloSelectView">
+      <h1 class="page-title">📄 Select Paper</h1>
+      <p class="page-sub">Select a paper for solo practice</p>
+      <div class="papers-grid" id="papersGrid"></div>
+    </div>
+
+    <!-- GROUP SETUP -->
+    <div id="groupSetupView" style="display:none">
+      <h1 class="page-title">👥 Group Session</h1>
+      <p class="page-sub">Create or join a room, then solve the paper together</p>
+      <div class="group-setup">
+        <h2>Group Paper Session</h2>
+        <p>Solve papers with your friends at the same time and compare results!</p>
+
+        <div class="input-group">
+          <label>Your Name</label>
+          <input type="text" id="playerName" placeholder="Apna naam likho..."/>
+        </div>
+
+        <button class="btn-full" onclick="createRoom()">🚀 Create New Room</button>
+        <div class="divider">or</div>
+        <div class="input-group">
+          <label>Enter Room Code</label>
+          <input type="text" id="joinRoomCode" placeholder="6-digit room code..." maxlength="6" style="text-transform:uppercase;letter-spacing:3px;font-size:1.1rem;text-align:center"/>
+        </div>
+        <button class="btn-outline-full" onclick="joinRoom()">🔗 Join Room</button>
+
+        <div id="roomCreatedBox" style="display:none;margin-top:20px">
+          <div class="room-code-display">
+            <div class="code" id="displayRoomCode"></div>
+            <p>Share this code with your friends</p>
+          </div>
+          <div class="member-list">
+            <h4>👥 Members</h4>
+            <div id="memberListUI"></div>
+          </div>
+          <div class="input-group">
+            <label>Select Paper</label>
+            <select id="groupPaperSelect"></select>
+          </div>
+          <button class="btn-full" onclick="startGroupSession()">▶ Start For Everyone</button>
+        </div>
+
+        <div id="roomJoinedBox" style="display:none;margin-top:20px">
+          <div style="text-align:center;padding:20px">
+            <div style="font-size:3rem;margin-bottom:12px">⏳</div>
+            <p style="font-weight:700">You have joined the room!</p>
+            <p style="color:var(--gray);font-size:0.88rem;margin-top:6px">Waiting for host to start...</p>
+            <div class="member-list" style="margin-top:16px">
+              <h4>👥 Members</h4>
+              <div id="memberListJoined"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 2: EXAM ===== -->
+<div class="screen" id="examScreen">
+  <div class="exam-header">
+    <div class="exam-info">
+      <div class="exam-title" id="examTitle">JEE Mains 2022</div>
+      <div class="exam-sub" id="examSubInfo">27 June 2022 — Shift 1 | 90 Questions</div>
+    </div>
+    <div class="exam-progress-wrap">
+      <div class="exam-progress-bar">
+        <div class="exam-progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="exam-progress-text" id="progressText">0/90 Attempted</div>
+    </div>
+    <div class="timer-box" id="timerBox">
+      <span class="timer-icon">⏱</span>
+      <span id="timerDisplay">3:00:00</span>
+    </div>
+  </div>
+
+  <div class="exam-body">
+    <div class="question-panel">
+      <div class="subject-tabs" id="subjectTabs"></div>
+      <div class="question-card" id="questionCard">
+        <div class="question-card-header">
+          <span class="q-number" id="qNumber">Question 1</span>
+          <span class="q-type-badge" id="qTypeBadge">MCQ</span>
+        </div>
+        <div class="question-pdf-embed" id="qPdfEmbed"></div>
+        <div class="question-options" id="qOptions"></div>
+      </div>
+      <div class="nav-buttons">
+        <button class="nav-btn btn-prev" onclick="prevQuestion()" id="prevBtn">← Back</button>
+        <button class="nav-btn btn-next" onclick="nextQuestion()" id="nextBtn">Next →</button>
+        <button class="nav-btn btn-submit-exam" onclick="confirmSubmit()" id="submitExamBtn" style="display:none">✅ Submit Paper</button>
+      </div>
+    </div>
+
+    <div class="sidebar-panel">
+      <div class="sidebar-title">📊 Question Status</div>
+      <div class="sidebar-legend">
+        <div class="legend-item"><div class="legend-dot ld-current"></div> Current</div>
+        <div class="legend-item"><div class="legend-dot ld-answered"></div> Answered</div>
+        <div class="legend-item"><div class="legend-dot ld-unattempted"></div> Not Attempted</div>
+      </div>
+      <div class="q-grid" id="qGrid"></div>
+      <div class="group-members-live" id="groupMembersLive" style="display:none">
+        <div class="gm-title">👥 Group Progress</div>
+        <div id="groupMembersProgress"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 3: RESULT ===== -->
+<div class="screen" id="resultScreen">
+  <div style="max-width:1100px;margin:0 auto">
+    <div class="result-header">
+      <div style="font-size:3rem;margin-bottom:12px" id="resultEmoji">🎉</div>
+      <div class="result-name" id="resultName">Your Result</div>
+      <div class="result-score-big" id="resultScoreBig">240</div>
+      <div class="result-label">Total Marks (Max: <span id="resultMaxMarks">300</span>)</div>
+    </div>
+
+    <div class="result-grid" id="resultGrid"></div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3>📊 Performance Overview</h3>
+        <canvas id="pieChart" height="220"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>📚 Subject-wise Score</h3>
+        <div class="subj-breakdown" id="subjBreakdown"></div>
+      </div>
+    </div>
+
+    <div class="group-result-section" id="groupResultSection" style="display:none">
+      <h2>👥 Group Rankings</h2>
+      <table class="group-table">
+        <thead>
+          <tr>
+            <th>Rank</th><th>Name</th><th>Score</th>
+            <th>Correct</th><th>Wrong</th><th>Skipped</th><th>Percentage</th>
+          </tr>
+        </thead>
+        <tbody id="groupRankingsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="q-review-section">
+      <h2>🔍 Question Review</h2>
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+        <button class="mode-btn active" onclick="filterReview('all',this)">All</button>
+        <button class="mode-btn" onclick="filterReview('wrong',this)">❌ Wrong</button>
+        <button class="mode-btn" onclick="filterReview('correct',this)">✅ Correct</button>
+        <button class="mode-btn" onclick="filterReview('skipped',this)">⏭ Skipped</button>
+      </div>
+      <div id="reviewCards"></div>
+    </div>
+
+    <div class="result-actions">
+      <button class="ra-btn ra-outline" onclick="goBackToLanding()">← Home</button>
+      <button class="ra-btn ra-outline" onclick="goBackToSelect()">📄 Another Paper</button>
+      <button class="ra-btn ra-outline" onclick="retryPaper()">🔄 Retry Same Paper</button>
+      <button class="ra-btn ra-check" onclick="startCheckMode()">✅ Check Answers</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  APP STATE
+// ============================================================
+const APP = {
+  papers: [],
+  currentPaper: null,
+  questions: [],
+  answers: {},
+  currentIdx: 0,
+  timerInterval: null,
+  timeLeft: 3 * 60 * 60,
+  mode: 'solo',
+  checkMode: false,   // step-by-step answer check mode
+  player: { name: 'Student', color: '#6C4EFF' },
+  room: null,
+  isHost: false,
+  allReviewCards: [],
+};
+
+const COLORS = ['#6C4EFF','#FF6B8A','#43E8B0','#FFD166','#4FC3F7','#F97316'];
+
+// ============================================================
+//  PAPER DATA — ADD MORE PAPERS HERE
+// ============================================================
+// JSON file path: Same folder mein rakhna (past-paper.html ke saath)
+// Ya subfolder mein: 'past-papers/27-6-2022-shift-1.json'
+// Dono kaam karega — jahan bhi rakhein, wahi path likho
+
+const AVAILABLE_PAPERS = [
+  {
+    id: '27-6-2022-shift-1',
+    title: '27 June 2022 — Shift 1',
+    exam: 'JEE Mains',
+    year: 2022,
+    date: '27.06.2022',
+    shift: 'S1',
+    questions: 90,
+    jsonFile: '27-6-2022-shift-1.json',   // ← Same folder mein hai to sirf file name
+    pdfFile: '27-6-2022-shift-1.pdf',     // ← Same folder mein hai to sirf file name
+    duration: 180,
+  },
+  // Naya paper add karne ka example:
+  // {
+  //   id: '29-6-2022-shift-2',
+  //   title: '29 June 2022 — Shift 2',
+  //   exam: 'JEE Mains',
+  //   year: 2022,
+  //   date: '29.06.2022',
+  //   shift: 'S2',
+  //   questions: 90,
+  //   jsonFile: '29-6-2022-shift-2.json',
+  //   pdfFile: '29-6-2022-shift-2.pdf',
+  //   duration: 180,
+  // },
+];
+
+// ============================================================
+//  INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('paperCount').textContent = AVAILABLE_PAPERS.length;
+  renderPapersGrid();
+  populateGroupPaperSelect();
+  syncGroupLoop();
+});
+
+function renderPapersGrid() {
+  const grid = document.getElementById('papersGrid');
+  if (AVAILABLE_PAPERS.length === 0) {
+    grid.innerHTML = `<div class="error-box">
+      <div class="error-icon">📭</div>
+      <p>No papers available yet.</p>
+      <div class="error-hint">Add papers to the AVAILABLE_PAPERS array inside past-paper.html (~line 375)</div>
+    </div>`;
+    return;
+  }
+  const paperModes = {};
+  grid.innerHTML = AVAILABLE_PAPERS.map(p => `
+    <div class="paper-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <span class="paper-tag tag-jee">${p.exam}</span>
+        <span style="font-size:0.78rem;color:var(--gray)">${p.year}</span>
+      </div>
+      <div class="paper-date">${p.title}</div>
+      <div class="paper-meta">
+        <span>📅 ${p.date}</span>
+        <span>🔄 Shift ${p.shift.replace('S','')}</span>
+        <span>⏱ ${p.duration} min</span>
+      </div>
+      <div class="paper-stats">
+        <div class="pstat"><div class="pstat-num">${p.questions}</div><div class="pstat-lbl">Questions</div></div>
+        <div class="pstat"><div class="pstat-num">${p.questions * 4}</div><div class="pstat-lbl">Max Marks</div></div>
+        <div class="pstat"><div class="pstat-num">3</div><div class="pstat-lbl">Subjects</div></div>
+      </div>
+      <button class="paper-start-btn" onclick="selectPaper('${p.id}','solo')">▶ Start Exam</button>
+    </div>
+  `).join('');
+  window._paperModes = {};
+}
+
+function populateGroupPaperSelect() {
+  const sel = document.getElementById('groupPaperSelect');
+  sel.innerHTML = AVAILABLE_PAPERS.map(p => `<option value="${p.id}">${p.title} (${p.exam})</option>`).join('');
+}
+
+function setPaperMode(evt, paperId, mode) {
+  evt.stopPropagation();
+  window._paperModes = window._paperModes || {};
+  window._paperModes[paperId] = mode;
+  // Update button states
+  const examBtn = document.getElementById('pmode-exam-' + paperId);
+  const checkBtn = document.getElementById('pmode-check-' + paperId);
+  if (examBtn && checkBtn) {
+    examBtn.classList.toggle('active', mode === 'exam');
+    checkBtn.classList.toggle('active', mode === 'check');
+  }
+}
+
+function startPaperCard(paperId) {
+  window._paperModes = window._paperModes || {};
+  const mode = window._paperModes[paperId] || 'exam';
+  APP.checkMode = (mode === 'check');
+  selectPaper(paperId, 'solo');
+}
+
+// ============================================================
+//  LANDING NAVIGATION
+// ============================================================
+function goToSoloSelect() {
+  document.getElementById('soloSelectView').style.display = 'block';
+  document.getElementById('groupSetupView').style.display = 'none';
+  APP.mode = 'solo';
+  showScreen('selectScreen');
+}
+
+function goToGroupSelect() {
+  document.getElementById('soloSelectView').style.display = 'none';
+  document.getElementById('groupSetupView').style.display = 'block';
+  APP.mode = 'group';
+  showScreen('selectScreen');
+}
+
+function goBackToLanding() {
+  clearInterval(APP.timerInterval);
+  APP.room = null;
+  APP.mode = 'solo';
+  showScreen('landingScreen');
+}
+
+function goBackToSelect() {
+  clearInterval(APP.timerInterval);
+  if (APP.mode === 'group') {
+    goToGroupSelect();
+  } else {
+    goToSoloSelect();
+  }
+}
+
+// ============================================================
+//  PAPER LOADING
+// ============================================================
+async function selectPaper(paperId, mode) {
+  APP.checkMode = false;  // reset check mode on fresh start
+  const paperMeta = AVAILABLE_PAPERS.find(p => p.id === paperId);
+  if (!paperMeta) return;
+  showLoading('Loading paper...');
+  try {
+    const res = await fetch(paperMeta.jsonFile);
+    if (!res.ok) throw new Error('File not found: ' + paperMeta.jsonFile);
+    const data = await res.json();
+    APP.currentPaper = paperMeta;
+    APP.questions = data;
+    APP.answers = {};
+    APP.currentIdx = 0;
+    APP.timeLeft = paperMeta.duration * 60;
+    APP.mode = mode;
+    hideLoading();
+    startExam();
+  } catch(e) {
+    hideLoading();
+    // Show detailed error in the card area
+    const errMsg = `
+      <div class="error-box">
+        <div class="error-icon">❌</div>
+        <p>JSON file could not be loaded!</p>
+        <div class="error-hint">
+          <strong>File searched:</strong> <code>${paperMeta.jsonFile}</code><br><br>
+          <strong>How to fix:</strong><br>
+          • past-paper.html and JSON file must be in the same folder<br>
+          • Or set the correct path in AVAILABLE_PAPERS (e.g. <code>'past-papers/filename.json'</code>)<br>
+          • Browser mein file:// ke bajay local server use karo (VS Code Live Server)
+        </div>
+      </div>`;
+    document.getElementById('papersGrid').insertAdjacentHTML('afterbegin', errMsg);
+    showToast('❌ JSON file not found — see error below');
+  }
+}
+
+// ============================================================
+//  EXAM
+// ============================================================
+function startExam() {
+  showScreen('examScreen');
+  document.getElementById('examTitle').textContent = `${APP.currentPaper.exam} ${APP.currentPaper.year}${APP.checkMode ? ' — ✅ Check Mode' : ''}`;
+  document.getElementById('examSubInfo').textContent = `${APP.currentPaper.date} — Shift ${APP.currentPaper.shift.replace('S','')} | ${APP.questions.length} Questions`;
+  // In check mode, hide timer
+  document.getElementById('timerBox').style.display = APP.checkMode ? 'none' : '';
+
+  buildSubjectTabs();
+  buildQGrid();
+  renderQuestion(0);
+  if (!APP.checkMode) startTimer();
+  // Hide skip button in check mode
+  const skipBtnEl = document.getElementById('skipBtn');
+  if (skipBtnEl) skipBtnEl.style.display = APP.checkMode ? 'none' : '';
+
+  if (APP.mode === 'group') {
+    document.getElementById('groupMembersLive').style.display = 'block';
+    saveGroupProgress();
+    renderGroupMembersLive();
+  } else {
+    document.getElementById('groupMembersLive').style.display = 'none';
+  }
+}
+
+function buildSubjectTabs() {
+  const subjects = [...new Set(APP.questions.map(q => q.subject))];
+  document.getElementById('subjectTabs').innerHTML = ['All', ...subjects].map((s, i) => 
+    `<button class="subj-tab ${i===0?'active':''}" onclick="filterSubject('${s}',this)">${s === 'All' ? '📋 All' : s}</button>`
+  ).join('');
+}
+
+let activeSubjectFilter = 'All';
+function filterSubject(subj, el) {
+  activeSubjectFilter = subj;
+  document.querySelectorAll('.subj-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if (subj !== 'All') {
+    const idx = APP.questions.findIndex(q => q.subject === subj);
+    if (idx !== -1) renderQuestion(idx);
+  } else {
+    renderQuestion(APP.currentIdx);
+  }
+}
+
+function buildQGrid() {
+  document.getElementById('qGrid').innerHTML = APP.questions.map((q, i) => 
+    `<div class="q-dot unattempted" id="qdot-${i}" onclick="renderQuestion(${i})" title="Q${i+1}">${i+1}</div>`
+  ).join('');
+}
+
+function renderQuestion(idx) {
+  APP.currentIdx = idx;
+  const q = APP.questions[idx];
+  const total = APP.questions.length;
+
+  document.getElementById('qNumber').textContent = `Question ${q.question_number} • ${q.subject}`;
+  const typeBadge = document.getElementById('qTypeBadge');
+  typeBadge.textContent = q.question_type === 'SA' ? 'Integer Type' : 'MCQ';
+  typeBadge.className = 'q-type-badge' + (q.question_type === 'SA' ? ' q-type-sa' : '');
+
+  // Question Image Display (replaces PDF placeholder)
+  let questionImgHtml = '';
+  if (q.question_img) {
+    questionImgHtml = `<div class="question-img-wrap"><img src="${q.question_img}" alt="Q${q.question_number}" style="max-width:100%;border-radius:10px"/></div>`;
+    if (q.question_img_extra && q.question_img_extra.length > 0) {
+      questionImgHtml += q.question_img_extra.map(src => `<div class="question-img-wrap"><img src="${src}" alt="extra" style="max-width:100%;border-radius:10px"/></div>`).join('');
+    }
+  }
+  document.getElementById('qPdfEmbed').innerHTML = questionImgHtml || `<div class="pdf-placeholder"><div class="pdf-icon">📄</div><p>Image not found</p></div>`;
+
+  // Answer area
+  const opts = document.getElementById('qOptions');
+  if (q.question_type === 'SA') {
+    const saved = APP.answers[q.id] !== undefined ? APP.answers[q.id] : '';
+    let checkBoxHtml = '';
+    if (APP.checkMode) {
+      const userAns = saved.toString();
+      const correct = (q.correct_numerical || '').toString();
+      const isCorrect = userAns !== '' && userAns === correct;
+      const hasAns = userAns !== '';
+      const statusClass = hasAns ? (isCorrect ? 'correct-ans' : 'wrong-ans') : 'skipped-ans';
+      const statusIcon = hasAns ? (isCorrect ? '✅ Correct!' : '❌ Wrong!') : '⏭ Skipped';
+      checkBoxHtml = `<div class="check-answer-box show ${statusClass}">
+        <div class="check-ans-title">${statusIcon}</div>
+        <div class="check-ans-detail">Your answer: <b>${userAns || '—'}</b> &nbsp;|&nbsp; Correct answer: <b>${correct}</b></div>
+      </div>`;
+    }
+    opts.innerHTML = `
+      <p style="color:var(--gray);font-size:0.88rem;margin-bottom:12px">Numerical answer type karo:</p>
+      <input class="numerical-input" type="number" id="numericalInput" value="${saved}" 
+             placeholder="Enter answer..." oninput="saveNumerical(this.value)" ${APP.checkMode ? 'readonly style="opacity:0.7"' : ''}/>
+      <div class="numerical-note">Enter integer or numerical value only</div>
+      ${checkBoxHtml}`;
+  } else {
+    const saved = APP.answers[q.id];
+    const labels = ['A','B','C','D'];
+    const optImgs = q.option_imgs || {};
+
+    // Check mode: determine correct/wrong
+    let checkBoxHtml = '';
+    if (APP.checkMode) {
+      const correct = q.correct_option;
+      const isCorrect = saved && saved === correct;
+      const hasAns = !!saved;
+      const statusClass = hasAns ? (isCorrect ? 'correct-ans' : 'wrong-ans') : 'skipped-ans';
+      const statusIcon = hasAns ? (isCorrect ? '✅ Correct!' : '❌ Wrong!') : '⏭ Skipped';
+      checkBoxHtml = `<div class="check-answer-box show ${statusClass}" style="margin-bottom:12px">
+        <div class="check-ans-title">${statusIcon}</div>
+        <div class="check-ans-detail">Your answer: <b>${saved || '—'}</b> &nbsp;|&nbsp; Correct answer: <b>${correct}</b></div>
+      </div>`;
+    }
+
+    const optBtns = labels.map((lbl) => {
+      const imgSrc = optImgs[lbl];
+      const imgHtml = imgSrc ? `<img class="option-img" src="${imgSrc}" alt="Option ${lbl}"/>` : `Option ${lbl}`;
+      let extraClass = saved === lbl ? 'selected' : '';
+      // In check mode, highlight correct/wrong
+      let style = '';
+      if (APP.checkMode) {
+        if (lbl === q.correct_option) style = 'border-color:#22C55E;background:#D1FAE5;';
+        else if (saved === lbl && saved !== q.correct_option) style = 'border-color:#EF4444;background:#FEE2E2;';
+      }
+      return `<button class="option-btn ${extraClass}" onclick="${APP.checkMode ? '' : "selectOption('" + lbl + "',this)"}" style="${style}${APP.checkMode ? 'cursor:default;' : ''}">
+        <span class="option-label">${lbl}</span>
+        <span class="option-btn-img">${imgHtml}</span>
+      </button>`;
+    }).join('');
+
+    opts.innerHTML = checkBoxHtml + optBtns;
+  }
+
+  // Grid dots — preserve answered/skipped status, only add/remove 'current'
+  document.querySelectorAll('.q-dot').forEach(d => d.classList.remove('current'));
+  const dot = document.getElementById(`qdot-${idx}`);
+  if (dot) {
+    // Keep existing status (answered/skipped/unattempted), just add current
+    if (!dot.classList.contains('answered') && !dot.classList.contains('skipped')) {
+      dot.className = 'q-dot unattempted current';
+    } else {
+      dot.classList.add('current');
+    }
+  }
+
+  document.getElementById('prevBtn').style.display = idx === 0 ? 'none' : '';
+  document.getElementById('nextBtn').style.display = idx === total-1 ? 'none' : '';
+  document.getElementById('submitExamBtn').style.display = idx === total-1 ? '' : 'none';
+
+  updateProgress();
+}
+
+function selectOption(lbl, el) {
+  const q = APP.questions[APP.currentIdx];
+  APP.answers[q.id] = lbl;
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  updateDot(APP.currentIdx, 'answered');
+  updateProgress();
+  if (APP.mode === 'group') saveGroupProgress();
+}
+
+function saveNumerical(val) {
+  const q = APP.questions[APP.currentIdx];
+  if (val.trim() !== '') {
+    APP.answers[q.id] = val.trim();
+    updateDot(APP.currentIdx, 'answered');
+  } else {
+    delete APP.answers[q.id];
+    updateDot(APP.currentIdx, 'unattempted');
+  }
+  updateProgress();
+  if (APP.mode === 'group') saveGroupProgress();
+}
+
+function updateDot(idx, status) {
+  const dot = document.getElementById(`qdot-${idx}`);
+  if (!dot) return;
+  const isCurrent = dot.classList.contains('current');
+  dot.className = `q-dot ${status}${isCurrent ? ' current' : ''}`;
+}
+
+function prevQuestion() {
+  if (APP.currentIdx > 0) { markCurrentDot(); renderQuestion(APP.currentIdx - 1); }
+}
+function nextQuestion() {
+  if (APP.currentIdx < APP.questions.length - 1) { markCurrentDot(); renderQuestion(APP.currentIdx + 1); }
+}
+function skipQuestion() {
+  const q = APP.questions[APP.currentIdx];
+  if (!APP.answers[q.id]) {
+    const dot = document.getElementById(`qdot-${APP.currentIdx}`);
+    if (dot) dot.className = 'q-dot skipped';
+  }
+  nextQuestion();
+}
+function markCurrentDot() {
+  const q = APP.questions[APP.currentIdx];
+  updateDot(APP.currentIdx, APP.answers[q.id] ? 'answered' : 'unattempted');
+}
+
+function updateProgress() {
+  const attempted = Object.keys(APP.answers).length;
+  const total = APP.questions.length;
+  document.getElementById('progressFill').style.width = (attempted/total*100) + '%';
+  document.getElementById('progressText').textContent = `${attempted}/${total} Attempted`;
+}
+
+function openPdf(pdfFile, page) {
+  window.open(`${pdfFile}#page=${page}`, '_blank');
+}
+
+// ============================================================
+//  TIMER
+// ============================================================
+function startTimer() {
+  clearInterval(APP.timerInterval);
+  APP.timerInterval = setInterval(() => {
+    APP.timeLeft--;
+    const h = Math.floor(APP.timeLeft / 3600);
+    const m = Math.floor((APP.timeLeft % 3600) / 60);
+    const s = APP.timeLeft % 60;
+    document.getElementById('timerDisplay').textContent = 
+      `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if (APP.timeLeft <= 600) document.getElementById('timerBox').classList.add('timer-warn');
+    if (APP.timeLeft <= 0) {
+      clearInterval(APP.timerInterval);
+      showToast('⏱ Time up! Automatic submit...');
+      setTimeout(submitExam, 2000);
+    }
+  }, 1000);
+}
+
+// ============================================================
+//  SUBMIT
+// ============================================================
+function confirmSubmit() {
+  const attempted = Object.keys(APP.answers).length;
+  const skipped = APP.questions.length - attempted;
+  if (confirm(`Submit paper?\n✅ Answered: ${attempted}\n⏭ Skipped: ${skipped}`)) submitExam();
+}
+
+function submitExam() {
+  clearInterval(APP.timerInterval);
+  if (APP.mode === 'group') {
+    saveGroupProgress(true);
+    showToast('✅ Your result has been saved!');
+    setTimeout(showResult, 1000);
+  } else {
+    showResult();
+  }
+}
+
+// ============================================================
+//  RESULT
+// ============================================================
+function showResult() {
+  showScreen('resultScreen');
+  const result = calculateResult(APP.answers, APP.questions, APP.player.name);
+  APP.allReviewCards = result.questionResults;
+  renderResultUI(result);
+  if (APP.mode === 'group') renderGroupResult(result);
+  renderReviewCards(result.questionResults);
+  drawPieChart(result);
+  drawSubjectBreakdown(result);
+}
+
+function calculateResult(answers, questions, playerName) {
+  let correct = 0, wrong = 0, skipped = 0, totalMarks = 0;
+  const subjectStats = {};
+  const questionResults = [];
+
+  questions.forEach(q => {
+    const subj = q.subject;
+    if (!subjectStats[subj]) subjectStats[subj] = {correct:0,wrong:0,skipped:0,total:0};
+    subjectStats[subj].total++;
+
+    const userAns = answers[q.id];
+    let status = 'skipped', marks = 0;
+
+    if (!userAns) {
+      skipped++; subjectStats[subj].skipped++;
+    } else if (q.question_type === 'SA') {
+      if (userAns.toString() === (q.correct_numerical || '').toString()) {
+        status = 'correct'; correct++; marks = 4; subjectStats[subj].correct++;
+      } else {
+        status = 'wrong'; wrong++; marks = -1; subjectStats[subj].wrong++;
+      }
+    } else {
+      if (userAns === q.correct_option) {
+        status = 'correct'; correct++; marks = 4; subjectStats[subj].correct++;
+      } else {
+        status = 'wrong'; wrong++; marks = -1; subjectStats[subj].wrong++;
+      }
+    }
+    totalMarks += marks;
+    questionResults.push({
+      q, userAns,
+      correctAns: q.question_type === 'SA' ? q.correct_numerical : q.correct_option,
+      status, marks
+    });
+  });
+
+  const maxMarks = questions.length * 4;
+  const percentage = maxMarks > 0 ? Math.round((totalMarks / maxMarks) * 100 * 10) / 10 : 0;
+  return { playerName, correct, wrong, skipped, totalMarks, maxMarks, percentage, subjectStats, questionResults };
+}
+
+function renderResultUI(res) {
+  const emoji = res.percentage >= 80 ? '🏆' : res.percentage >= 60 ? '🎉' : res.percentage >= 40 ? '📚' : '💪';
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultName').textContent = `${res.playerName} 's Result`;
+  document.getElementById('resultScoreBig').textContent = res.totalMarks;
+  document.getElementById('resultMaxMarks').textContent = res.maxMarks;
+  document.getElementById('resultGrid').innerHTML = `
+    <div class="result-stat"><div class="rs-num rs-correct">${res.correct}</div><div class="rs-lbl">✅ Correct</div></div>
+    <div class="result-stat"><div class="rs-num rs-wrong">${res.wrong}</div><div class="rs-lbl">❌ Wrong</div></div>
+    <div class="result-stat"><div class="rs-num rs-skipped">${res.skipped}</div><div class="rs-lbl">⏭ Skipped</div></div>
+    <div class="result-stat"><div class="rs-num rs-marks">${res.percentage}%</div><div class="rs-lbl">📊 Percentage</div></div>
+    <div class="result-stat"><div class="rs-num rs-marks">${res.totalMarks}</div><div class="rs-lbl">🎯 Total Marks</div></div>
+    <div class="result-stat"><div class="rs-num" style="color:var(--gray)">${res.maxMarks}</div><div class="rs-lbl">Max Marks</div></div>
+  `;
+}
+
+function drawPieChart(res) {
+  const canvas = document.getElementById('pieChart');
+  const ctx = canvas.getContext('2d');
+  const data = [
+    {label:'Correct',value:res.correct,color:'#22C55E'},
+    {label:'Wrong',value:res.wrong,color:'#EF4444'},
+    {label:'Skipped',value:res.skipped,color:'#94A3B8'},
+  ].filter(d => d.value > 0);
+
+  const total = data.reduce((s,d) => s + d.value, 0);
+  if (total === 0) return;
+
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const cx = W * 0.38, cy = H / 2, r = Math.min(cx, cy) - 10;
+
+  let angle = -Math.PI / 2;
+  data.forEach(d => {
+    const slice = (d.value / total) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, angle, angle + slice);
+    ctx.fillStyle = d.color;
+    ctx.fill();
+    angle += slice;
+  });
+
+  // Donut hole
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.55, 0, 2 * Math.PI);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+
+  // Center text
+  ctx.fillStyle = '#1A1040';
+  ctx.font = `bold ${Math.round(r*0.3)}px Sora,sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(res.percentage + '%', cx, cy + r*0.1);
+
+  // Legend
+  const lx = W * 0.72, ly = cy - (data.length * 20) / 2;
+  data.forEach((d, i) => {
+    ctx.fillStyle = d.color;
+    ctx.fillRect(lx - 12, ly + i * 28 - 10, 14, 14);
+    ctx.fillStyle = '#1A1040';
+    ctx.font = `600 12px Nunito,sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(`${d.label}: ${d.value}`, lx + 6, ly + i * 28 + 2);
+  });
+}
+
+function drawSubjectBreakdown(res) {
+  const container = document.getElementById('subjBreakdown');
+  container.innerHTML = Object.entries(res.subjectStats).map(([subj, s]) => {
+    const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
+    return `<div class="subj-row">
+      <div class="subj-name">${subj}</div>
+      <div class="subj-bar-wrap"><div class="subj-bar-fill" style="width:${pct}%"></div></div>
+      <div class="subj-pct">${pct}%</div>
+    </div>
+    <div style="font-size:0.75rem;color:var(--gray);margin-bottom:10px;padding-left:102px">
+      ✅${s.correct} ❌${s.wrong} ⏭${s.skipped}
+    </div>`;
+  }).join('');
+}
+
+function renderReviewCards(cards) {
+  document.getElementById('reviewCards').innerHTML = cards.map((r, i) => `
+    <div class="review-card ${r.status}" data-status="${r.status}">
+      <div class="review-header">
+        <div class="review-q-num">Q${r.q.question_number} — ${r.q.subject}</div>
+        <div class="review-status ${r.status === 'correct' ? 'status-correct' : r.status === 'wrong' ? 'status-wrong' : 'status-skipped'}">
+          ${r.status === 'correct' ? '✅ Correct' : r.status === 'wrong' ? '❌ Wrong' : '⏭ Skipped'}
+        </div>
+      </div>
+      <div class="review-answer">
+        Your Answer: <span>${r.userAns || '—'}</span> &nbsp;|&nbsp; 
+        Correct: <span style="color:var(--correct)">${r.correctAns || '—'}</span>
+        ${r.status !== 'skipped' ? `&nbsp;|&nbsp; Marks: <span style="color:${r.marks>0?'var(--correct)':'var(--wrong)'}">${r.marks>0?'+':''}${r.marks}</span>` : ''}
+      </div>
+      <div style="margin-top:8px">
+        <button class="pdf-open-btn" onclick="openPdf('${r.q.pdf_file || APP.currentPaper.pdfFile}',${r.q.pdf_page})" style="font-size:0.75rem;padding:5px 12px">
+          📄 View Page ${r.q.pdf_page}
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+function filterReview(filter, btn) {
+  document.querySelectorAll('#reviewCards .review-card').forEach(card => {
+    card.style.display = (filter === 'all' || card.dataset.status === filter) ? '' : 'none';
+  });
+  document.querySelectorAll('#resultScreen .mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function startCheckMode() {
+  clearInterval(APP.timerInterval);
+  APP.checkMode = true;
+  APP.currentIdx = 0;
+  // Keep existing answers as-is for review
+  startExam();
+}
+
+function retryPaper() {
+  clearInterval(APP.timerInterval);
+  APP.answers = {};
+  APP.currentIdx = 0;
+  APP.timeLeft = APP.currentPaper.duration * 60;
+  startExam();
+}
+
+// ============================================================
+//  GROUP MODE
+// ============================================================
+const ROOM_PREFIX = 'studysync_room_';
+function getRoomKey(code) { return ROOM_PREFIX + code; }
+
+function createRoom() {
+  const name = document.getElementById('playerName').value.trim();
+  if (!name) { showToast('Please enter your name first!'); return; }
+  APP.player.name = name;
+  APP.player.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+  APP.isHost = true;
+  const code = Math.random().toString(36).substring(2,8).toUpperCase();
+  APP.room = code;
+
+  const roomData = {
+    host: name,
+    members: [{ name, color: APP.player.color }],
+    answers: {},
+    progress: {},
+    started: false,
+    paperId: AVAILABLE_PAPERS[0]?.id || '',
+  };
+  localStorage.setItem(getRoomKey(code), JSON.stringify(roomData));
+  localStorage.setItem('studysync_my_name', name);
+
+  document.getElementById('displayRoomCode').textContent = code;
+  document.getElementById('roomCreatedBox').style.display = 'block';
+  renderMemberList('memberListUI', roomData.members, name);
+  showToast('✅ Room created! Share the code.');
+}
+
+function joinRoom() {
+  const name = document.getElementById('playerName').value.trim();
+  const code = document.getElementById('joinRoomCode').value.trim().toUpperCase();
+  if (!name) { showToast('Please enter your name first!'); return; }
+  if (code.length < 4) { showToast('Please enter a valid room code!'); return; }
+
+  const stored = localStorage.getItem(getRoomKey(code));
+  if (!stored) { showToast('❌ Room code not found! Has the host created the room?'); return; }
+
+  const roomData = JSON.parse(stored);
+  APP.player.name = name;
+  APP.player.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+  APP.isHost = false;
+  APP.room = code;
+
+  if (!roomData.members.find(m => m.name === name)) {
+    roomData.members.push({ name, color: APP.player.color });
+    localStorage.setItem(getRoomKey(code), JSON.stringify(roomData));
+  }
+  localStorage.setItem('studysync_my_name', name);
+
+  document.getElementById('roomJoinedBox').style.display = 'block';
+  renderMemberList('memberListJoined', roomData.members, roomData.host);
+  showToast('✅ Room joined! Waiting for host to start.');
+}
+
+function renderMemberList(containerId, members, host) {
+  document.getElementById(containerId).innerHTML = members.map(m => `
+    <div class="member-item">
+      <div class="m-avatar" style="background:${m.color}">${m.name[0].toUpperCase()}</div>
+      <div>
+        <div class="m-name">${m.name}</div>
+        <div class="m-status">Online</div>
+      </div>
+      ${m.name === host ? '<div class="m-host">Host</div>' : ''}
+    </div>`).join('');
+}
+
+function startGroupSession() {
+  const paperId = document.getElementById('groupPaperSelect').value;
+  if (!paperId) { showToast('Please select a paper!'); return; }
+  const stored = localStorage.getItem(getRoomKey(APP.room));
+  if (!stored) return;
+  const roomData = JSON.parse(stored);
+  roomData.started = true;
+  roomData.paperId = paperId;
+  localStorage.setItem(getRoomKey(APP.room), JSON.stringify(roomData));
+  selectPaper(paperId, 'group');
+}
+
+function saveGroupProgress(final = false) {
+  if (!APP.room) return;
+  const stored = localStorage.getItem(getRoomKey(APP.room));
+  if (!stored) return;
+  const roomData = JSON.parse(stored);
+  if (!roomData.answers) roomData.answers = {};
+  if (!roomData.progress) roomData.progress = {};
+  roomData.answers[APP.player.name] = APP.answers;
+  roomData.progress[APP.player.name] = Object.keys(APP.answers).length;
+  localStorage.setItem(getRoomKey(APP.room), JSON.stringify(roomData));
+}
+
+function renderGroupMembersLive() {
+  if (!APP.room) return;
+  const stored = localStorage.getItem(getRoomKey(APP.room));
+  if (!stored) return;
+  const roomData = JSON.parse(stored);
+  const progress = roomData.progress || {};
+  const total = APP.questions.length;
+  document.getElementById('groupMembersProgress').innerHTML = roomData.members.map(m => `
+    <div class="gm-item">
+      <div class="gm-avatar" style="background:${m.color}">${m.name[0].toUpperCase()}</div>
+      <div class="gm-name">${m.name}</div>
+      <div class="gm-progress">${progress[m.name] || 0}/${total}</div>
+    </div>`).join('');
+}
+
+function renderGroupResult(myResult) {
+  document.getElementById('groupResultSection').style.display = 'block';
+  const stored = localStorage.getItem(getRoomKey(APP.room));
+  if (!stored) return;
+  const roomData = JSON.parse(stored);
+  const results = roomData.members.map(m => {
+    const ans = roomData.answers?.[m.name] || {};
+    return { ...calculateResult(ans, APP.questions, m.name), color: m.color };
+  }).sort((a, b) => b.totalMarks - a.totalMarks);
+
+  document.getElementById('groupRankingsBody').innerHTML = results.map((r, i) => `
+    <tr style="${r.playerName === APP.player.name ? 'background:rgba(108,78,255,0.05)' : ''}">
+      <td><div class="rank-badge rank-${i<3?i+1:'other'}">${i+1}</div></td>
+      <td><span style="display:flex;align-items:center;gap:8px">
+        <span style="width:24px;height:24px;border-radius:50%;background:${r.color};display:inline-flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:white">${r.playerName[0].toUpperCase()}</span>
+        ${r.playerName} ${r.playerName === APP.player.name ? '(You)' : ''}
+      </span></td>
+      <td style="font-weight:800;font-family:'Sora',sans-serif;color:var(--violet)">${r.totalMarks}</td>
+      <td style="color:var(--correct);font-weight:700">${r.correct}</td>
+      <td style="color:var(--wrong);font-weight:700">${r.wrong}</td>
+      <td style="color:var(--skipped)">${r.skipped}</td>
+      <td style="font-weight:700">${r.percentage}%</td>
+    </tr>`).join('');
+}
+
+function syncGroupLoop() {
+  setInterval(() => {
+    if (APP.mode === 'group' && APP.room) {
+      const stored = localStorage.getItem(getRoomKey(APP.room));
+      if (!stored) return;
+      const roomData = JSON.parse(stored);
+      // Non-host: check if started
+      if (!APP.isHost && roomData.started && document.getElementById('selectScreen').classList.contains('active')) {
+        APP.player.name = localStorage.getItem('studysync_my_name') || APP.player.name;
+        selectPaper(roomData.paperId, 'group');
+      }
+      // Live progress update
+      if (document.getElementById('examScreen').classList.contains('active')) {
+        renderGroupMembersLive();
+      }
+      // Member list updates
+      const joinedBox = document.getElementById('roomJoinedBox');
+      if (joinedBox && joinedBox.style.display !== 'none') {
+        renderMemberList('memberListJoined', roomData.members, roomData.host);
+      }
+      const createdBox = document.getElementById('roomCreatedBox');
+      if (createdBox && createdBox.style.display !== 'none') {
+        renderMemberList('memberListUI', roomData.members, roomData.host);
+      }
+    }
+  }, 2000);
+}
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ============================================================
+//  UTILS
+// ============================================================
+function showLoading(text = 'Loading...') {
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loadingOverlay').style.display = 'flex';
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

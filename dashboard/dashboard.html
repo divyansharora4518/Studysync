@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Dashboard — StudySync</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<style>
+body { background: #F7F5FF; }
+.topbar { position:fixed; top:0; left:0; right:0; z-index:200; height:66px; background:white; border-bottom:1.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 24px; }
+.topbar-logo { font-family:'Sora',sans-serif; font-weight:800; font-size:1.3rem; color:var(--violet); display:flex; align-items:center; gap:9px; }
+.topbar-logo-icon { width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,var(--violet),var(--sky)); display:flex; align-items:center; justify-content:center; font-size:1rem; }
+.topbar-right { display:flex; align-items:center; gap:12px; }
+.me-badge { display:flex; align-items:center; gap:9px; background:rgba(108,78,255,0.07); padding:7px 14px; border-radius:50px; cursor:pointer; }
+.me-name { font-weight:700; font-size:0.88rem; }
+.page-wrap { padding:86px 24px 24px; max-width:1200px; margin:0 auto; }
+.page-header { margin-bottom:28px; }
+.page-header h1 { font-size:1.8rem; margin-bottom:4px; }
+.page-header p { color:var(--gray); }
+.dash-grid { display:grid; grid-template-columns:1fr 340px; gap:24px; }
+.panel { background:white; border-radius:var(--radius); border:1.5px solid var(--border); box-shadow:var(--shadow); overflow:hidden; }
+.panel-header { padding:18px 20px; border-bottom:1.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.panel-title { font-family:'Sora',sans-serif; font-weight:700; font-size:1rem; }
+.panel-body { padding:18px 20px; }
+.users-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; }
+.ucard { border-radius:var(--radius-sm); border:1.5px solid var(--border); padding:18px 14px; text-align:center; background:white; transition:all 0.22s; cursor:pointer; position:relative; }
+.ucard:hover { transform:translateY(-4px); box-shadow:0 8px 24px rgba(108,78,255,0.15); border-color:var(--violet); }
+.ucard-avatar { width:56px; height:56px; border-radius:50%; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; font-weight:800; color:white; position:relative; }
+.ucard-name { font-weight:700; font-size:0.92rem; margin-bottom:2px; }
+.ucard-loc { font-size:0.75rem; color:var(--gray); margin-bottom:8px; }
+.ucard-btns { display:flex; gap:6px; justify-content:center; }
+.group-item { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-sm); border:1.5px solid var(--border); margin-bottom:10px; cursor:pointer; transition:all 0.18s; }
+.group-item:hover { border-color:var(--violet); background:rgba(108,78,255,0.04); }
+.group-icon { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--violet),var(--sky)); display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
+.group-info { flex:1; }
+.group-name { font-weight:700; font-size:0.9rem; }
+.group-meta { font-size:0.75rem; color:var(--gray); margin-top:2px; }
+.group-count { font-size:0.75rem; font-weight:700; color:var(--violet); background:rgba(108,78,255,0.1); padding:2px 8px; border-radius:50px; }
+.filter-bar { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+.filter-chip { padding:6px 14px; border-radius:50px; border:1.5px solid var(--gray-light); background:white; font-weight:700; font-size:0.8rem; cursor:pointer; transition:all 0.18s; }
+.filter-chip.active,.filter-chip:hover { border-color:var(--violet); background:rgba(108,78,255,0.08); color:var(--violet); }
+.no-match { text-align:center; padding:40px 20px; color:var(--gray); }
+.no-match .nm-icon { font-size:2.5rem; margin-bottom:12px; }
+.no-match h3 { font-size:1.05rem; margin-bottom:6px; }
+.create-group-form { display:none; padding:16px; border:1.5px solid var(--border); border-radius:var(--radius-sm); margin-bottom:14px; background:#F9F8FF; }
+.create-group-form.show { display:block; animation:fadeUp 0.3s ease; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo"><div class="topbar-logo-icon">📚</div> StudySync</div>
+  <div class="topbar-right">
+    <a href="../quiz/solo-quiz.html" class="btn btn-ghost btn-sm">🧠 Solo Quiz</a>
+    <a href="../ai/ai-chat.html" class="btn btn-ghost btn-sm">🤖 AI Chat</a>
+    <div class="me-badge" id="meBadge">
+      <div class="avatar avatar-sm" id="meAvatar" style="background:linear-gradient(135deg,var(--violet),var(--sky))">U</div>
+      <span class="me-name" id="meName">Loading...</span>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="handleLogout()">Logout</button>
+  </div>
+</div>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <h1>Namaste 👋 <span id="greetName">Student</span></h1>
+    <p>Yahan <span id="matchCount">0</span> students aapke subject aur language se match kar rahe hain</p>
+  </div>
+
+  <div class="dash-grid">
+    <!-- Left: Nearby Users -->
+    <div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🎯 Nearby Matching Students</div>
+          <div class="flex gap-8">
+            <span style="font-size:0.75rem;color:var(--gray)">🟢 English &nbsp; 🔵 Hindi</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="filter-bar" id="filterBar">
+            <div class="filter-chip active" onclick="setFilter('all',this)">All</div>
+            <div class="filter-chip" onclick="setFilter('english',this)">🟢 English</div>
+            <div class="filter-chip" onclick="setFilter('hindi',this)">🔵 Hindi</div>
+          </div>
+          <div class="users-grid" id="usersGrid">
+            <div class="no-match"><div class="nm-icon">🔄</div><h3>Users load ho rahe hain...</h3></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Groups -->
+    <div>
+      <div class="panel" style="margin-bottom:18px;">
+        <div class="panel-header">
+          <div class="panel-title">👥 Study Groups</div>
+          <button class="btn btn-primary btn-sm" onclick="toggleGroupForm()">+ New Group</button>
+        </div>
+        <div class="panel-body">
+          <div class="create-group-form" id="groupForm">
+            <div class="form-group"><label class="form-label">Group Name</label><input type="text" id="groupName" class="form-input" placeholder="e.g. JEE Physics Squad"/></div>
+            <button class="btn btn-primary btn-full btn-sm" onclick="handleCreateGroup()">Create Group</button>
+          </div>
+          <div id="groupsList"><div class="loader"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">⚡ Quick Actions</div></div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:10px;">
+          <a href="../quiz/solo-quiz.html" class="btn btn-ghost btn-full" style="justify-content:flex-start;gap:10px">🧠 Solo AI Quiz</a>
+          <a href="../ai/ai-chat.html"    class="btn btn-ghost btn-full" style="justify-content:flex-start;gap:10px">🤖 AI Doubt Chat</a>
+          <button class="btn btn-ghost btn-full" style="justify-content:flex-start;gap:10px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:inherit;color:inherit;padding:0" onclick="openPastPapers()">📄 Past Papers</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===== PAST PAPERS MODAL ===== -->
+<div id="pastPapersOverlay" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(20,10,60,0.55);backdrop-filter:blur(6px);">
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:#F4F2FF;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:white;border-bottom:1.5px solid rgba(108,78,255,0.12);flex-shrink:0;">
+      <div style="font-family:'Sora',sans-serif;font-weight:800;font-size:1.1rem;color:#6C4EFF;">📄 Past Papers</div>
+      <button onclick="closePastPapers()" style="background:rgba(108,78,255,0.08);border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:1rem;color:#6C4EFF;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <iframe id="pastPapersFrame" src="" style="flex:1;border:none;width:100%;" allow="fullscreen"></iframe>
+  </div>
+</div>
+
+<script>
+window.openPastPapers = function() {
+  const overlay = document.getElementById('pastPapersOverlay');
+  const frame   = document.getElementById('pastPapersFrame');
+  if (!frame.getAttribute('data-loaded')) {
+    frame.src = '../past-papers/past-paper.html';
+    frame.setAttribute('data-loaded', '1');
+  }
+  overlay.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+};
+window.closePastPapers = function() {
+  document.getElementById('pastPapersOverlay').style.display = 'none';
+  document.body.style.overflow = '';
+};
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closePastPapers();
+});
+</script>
+
+<script type="module">
+import { requireAuth, getCurrentUserProfile, logoutUser } from "../js/auth.js";
+import { listenToMatchingUsers, listenToMatchingGroups } from "../js/matchmaking.js";
+import { createGroup, joinGroup } from "../js/chat.js";
+
+requireAuth("../auth/login.html");
+
+let myProfile = null;
+let allUsers  = [];
+let curFilter = "all";
+
+// Load my profile
+const profile = await getCurrentUserProfile();
+if (profile) {
+  myProfile = profile;
+  document.getElementById("greetName").textContent = profile.name.split(" ")[0];
+  document.getElementById("meName").textContent = profile.name;
+  document.getElementById("meAvatar").textContent = profile.name[0].toUpperCase();
+}
+
+// Listen to matching users
+listenToMatchingUsers(myProfile, (users) => {
+  allUsers = users;
+  document.getElementById("matchCount").textContent = users.length;
+  renderUsers(users);
+});
+
+// Listen to matching groups
+listenToMatchingGroups(myProfile, (groups) => {
+  renderGroups(groups);
+});
+
+function renderUsers(users) {
+  const grid = document.getElementById("usersGrid");
+  const filtered = curFilter === "all" ? users : users.filter(u => u.language === curFilter);
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="no-match" style="grid-column:1/-1"><div class="nm-icon">😔</div><h3>Koi match nahi mila</h3><p class="text-sm text-gray">Abhi koi active nahi hai. Solo quiz try karo!</p><a href="../quiz/solo-quiz.html" class="btn btn-primary btn-sm" style="margin-top:14px;display:inline-flex">🧠 Solo Quiz</a></div>`;
+    return;
+  }
+  const colors = ["linear-gradient(135deg,#6C4EFF,#4FC3F7)","linear-gradient(135deg,#FF6B8A,#FFD166)","linear-gradient(135deg,#43E8B0,#4FC3F7)","linear-gradient(135deg,#FFD166,#FF6B8A)","linear-gradient(135deg,#6C4EFF,#43E8B0)"];
+  grid.innerHTML = filtered.map((u, i) => `
+    <div class="ucard" onclick="startChat('${u.uid}')">
+      <div class="ucard-avatar" style="background:${colors[i%colors.length]}">
+        ${u.photoURL ? `<img src="${u.photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>` : u.name[0].toUpperCase()}
+        <span class="online-dot dot-md ${u.language==='english'?'dot-green':'dot-blue'}"></span>
+      </div>
+      <div class="ucard-name">${u.name}</div>
+      <div class="ucard-loc">📍 ${u.location}</div>
+      <span class="tag tag-${u.category}">${u.category.toUpperCase()}</span>
+      <div class="ucard-btns" style="margin-top:10px">
+        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();startChat('${u.uid}')">💬 Chat</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderGroups(groups) {
+  const el = document.getElementById("groupsList");
+  if (groups.length === 0) {
+    el.innerHTML = `<p class="text-gray text-sm" style="text-align:center;padding:16px">Koi group nahi hai. Pehla group banao!</p>`;
+    return;
+  }
+  el.innerHTML = groups.map(g => `
+    <div class="group-item" onclick="window.location.href='group-room.html?gid=${g.id}'">
+      <div class="group-icon">👥</div>
+      <div class="group-info">
+        <div class="group-name">${g.name || "Study Group"}</div>
+        <div class="group-meta">${g.subject} • ${g.category?.toUpperCase()}</div>
+      </div>
+      <span class="group-count">${(g.members||[]).length} 👤</span>
+    </div>
+  `).join("");
+}
+
+window.startChat = function(uid) {
+  window.location.href = `chat.html?uid=${uid}`;
+};
+
+window.setFilter = function(filter, el) {
+  curFilter = filter;
+  document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+  el.classList.add("active");
+  renderUsers(allUsers);
+};
+
+window.toggleGroupForm = function() {
+  document.getElementById("groupForm").classList.toggle("show");
+};
+
+window.handleCreateGroup = async function() {
+  const name = document.getElementById("groupName").value.trim();
+  if (!name) { showToast("Group ka naam likho!", "error"); return; }
+  await createGroup({ name });
+  document.getElementById("groupName").value = "";
+  document.getElementById("groupForm").classList.remove("show");
+  showToast("Group ban gaya! 🎉", "success");
+};
+
+window.handleLogout = async function() {
+  await logoutUser();
+};
+
+function showToast(msg, type="info") {
+  const t = document.createElement("div");
+  t.className = `toast ${type}`;
+  t.innerHTML = `${type==="success"?"✅":type==="error"?"❌":"ℹ️"} ${msg}`;
+  document.getElementById("toastContainer").appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+</script>
+</body>
+</html>

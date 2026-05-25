@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Group Room — StudySync</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<style>
+body { overflow:hidden; background:#F7F5FF; }
+.room-page { display:flex; flex-direction:column; height:100vh; }
+.room-topbar { height:62px; background:white; border-bottom:1.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 18px; flex-shrink:0; }
+.room-title { font-family:'Sora',sans-serif; font-weight:700; font-size:1rem; }
+.room-meta  { font-size:0.75rem; color:var(--gray); }
+.room-layout { display:flex; flex:1; overflow:hidden; }
+.room-sidebar { width:240px; flex-shrink:0; background:white; border-right:1.5px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.sidebar-section { padding:14px 14px 0; }
+.sidebar-sec-title { font-size:0.7rem; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:var(--gray); margin-bottom:10px; }
+.member-item { display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:8px; margin-bottom:4px; }
+.member-name { font-size:0.83rem; font-weight:700; }
+.room-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.room-tabs { display:flex; background:white; border-bottom:1.5px solid var(--border); padding:0 16px; flex-shrink:0; }
+.room-tab { padding:14px 18px; font-weight:700; font-size:0.85rem; color:var(--gray); cursor:pointer; border-bottom:3px solid transparent; transition:all 0.18s; }
+.room-tab.active { color:var(--violet); border-color:var(--violet); }
+.tab-panel { display:none; flex:1; overflow-y:auto; }
+.tab-panel.active { display:flex; flex-direction:column; }
+/* CHAT TAB */
+.gc-messages { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+.gc-input-bar { background:white; border-top:1.5px solid var(--border); padding:12px 16px; display:flex; gap:8px; align-items:center; flex-shrink:0; }
+.gc-input { flex:1; padding:10px 16px; border:2px solid var(--gray-light); border-radius:50px; font-family:'Nunito',sans-serif; font-size:0.92rem; outline:none; }
+.gc-input:focus { border-color:var(--violet); }
+/* QUIZ TAB */
+.quiz-tab-body { padding:20px; flex:1; overflow-y:auto; }
+.quiz-gen-box { background:white; border-radius:var(--radius-sm); border:1.5px solid var(--border); padding:20px; margin-bottom:18px; }
+.quiz-gen-title { font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+.leader-section { background:white; border-radius:var(--radius-sm); border:1.5px solid var(--border); padding:20px; }
+/* POLL TAB */
+.poll-tab-body { padding:20px; flex:1; overflow-y:auto; }
+.poll-box { background:white; border-radius:var(--radius-sm); border:1.5px solid var(--border); padding:20px; margin-bottom:18px; }
+.poll-opt { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:8px; border:1.5px solid var(--gray-light); margin-bottom:8px; cursor:pointer; transition:all 0.18s; }
+.poll-opt:hover { border-color:var(--violet); }
+.poll-bar-wrap { flex:1; height:6px; background:var(--gray-light); border-radius:3px; overflow:hidden; }
+.poll-bar { height:100%; background:linear-gradient(90deg,var(--violet),var(--sky)); border-radius:3px; transition:width 0.4s; }
+</style>
+</head>
+<body>
+<div class="room-page">
+  <div class="room-topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn btn-ghost btn-sm" onclick="history.back()">← Back</button>
+      <div>
+        <div class="room-title" id="roomTitle">Group Room</div>
+        <div class="room-meta" id="roomMeta">Loading...</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <a href="../quiz/solo-quiz.html" class="btn btn-ghost btn-sm">🧠 Solo Quiz</a>
+    </div>
+  </div>
+
+  <div class="room-layout">
+    <!-- Members sidebar -->
+    <div class="room-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-sec-title">Members</div>
+        <div id="membersList"><div class="loader" style="padding:16px"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- Main area with tabs -->
+    <div class="room-main">
+      <div class="room-tabs">
+        <div class="room-tab active" onclick="switchTab('chat',this)">💬 Chat</div>
+        <div class="room-tab" onclick="switchTab('files',this)">📎 Files</div>
+        <div class="room-tab" onclick="switchTab('quiz',this)">🧠 Quiz</div>
+        <div class="room-tab" onclick="switchTab('poll',this)">📊 Poll</div>
+      </div>
+
+      <!-- CHAT -->
+      <div class="tab-panel active" id="tab-chat">
+        <div class="gc-messages" id="gcMessages"><div class="loader"><div class="spinner"></div></div></div>
+        <div style="flex-shrink:0">
+          <div style="padding:0 16px 8px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('groupFile').click()">📎 File</button>
+            <input type="file" id="groupFile" style="display:none" onchange="handleGroupFile(this)"/>
+          </div>
+          <div class="gc-input-bar">
+            <input class="gc-input" id="gcInput" placeholder="Group mein message karo..." onkeydown="if(event.key==='Enter')sendGrpMsg()"/>
+            <button class="send-btn" onclick="sendGrpMsg()">➤</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILES -->
+      <div class="tab-panel" id="tab-files" style="padding:20px;gap:12px;">
+        <div style="margin-bottom:10px">
+          <button class="btn btn-primary btn-sm" onclick="document.getElementById('uploadFile').click()">+ Upload File/Image</button>
+          <input type="file" id="uploadFile" style="display:none" onchange="handleGroupFile(this)"/>
+        </div>
+        <div id="filesList" style="display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
+
+      <!-- QUIZ -->
+      <div class="tab-panel" id="tab-quiz">
+        <div class="quiz-tab-body">
+          <div class="quiz-gen-box">
+            <div class="quiz-gen-title">🧠 AI Quiz Generate Karo</div>
+            <div class="form-group"><label class="form-label">Questions kitne?</label>
+              <select id="qCount" class="form-input form-select"><option value="3">3</option><option value="5" selected>5</option><option value="10">10</option></select>
+            </div>
+            <button class="btn btn-primary btn-full" id="genQuizBtn" onclick="handleGenQuiz()">Generate Quiz for Group</button>
+          </div>
+          <div id="quizArea"></div>
+          <div class="leader-section" id="leaderSection" style="display:none">
+            <div style="font-family:'Sora',sans-serif;font-weight:700;margin-bottom:14px">🏆 Leaderboard</div>
+            <div id="leaderList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- POLL -->
+      <div class="tab-panel" id="tab-poll">
+        <div class="poll-tab-body">
+          <div class="poll-box">
+            <div style="font-weight:700;margin-bottom:12px">📊 New Poll</div>
+            <div class="form-group"><input type="text" id="pollQ" class="form-input" placeholder="Poll question likho..."/></div>
+            <div class="form-group"><input type="text" id="pollO1" class="form-input" placeholder="Option A"/></div>
+            <div class="form-group"><input type="text" id="pollO2" class="form-input" placeholder="Option B"/></div>
+            <div class="form-group"><input type="text" id="pollO3" class="form-input" placeholder="Option C (optional)"/></div>
+            <button class="btn btn-primary" onclick="handleCreatePoll()">Create Poll</button>
+          </div>
+          <div id="pollsList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db } from "../js/firebase-config.js";
+import { requireAuth, getCurrentUserProfile } from "../js/auth.js";
+import { sendGroupMessage, sendGroupFile, listenGroupMessages, joinGroup } from "../js/chat.js";
+import { generateQuiz, saveGroupQuiz, submitQuizScore, listenToLeaderboard, createPoll, votePoll } from "../js/quiz.js";
+import { doc, getDoc, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+requireAuth("../auth/login.html");
+
+const params = new URLSearchParams(location.search);
+const groupId = params.get("gid");
+let myProfile = null;
+let curQuiz   = null;
+let curQuizId = null;
+let answers   = {};
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
+  myProfile = await getCurrentUserProfile();
+
+  // Join group
+  await joinGroup(groupId);
+
+  // Load group info
+  const gSnap = await getDoc(doc(db, "groups", groupId));
+  const g = gSnap.data();
+  document.getElementById("roomTitle").textContent = g.name || "Study Group";
+  document.getElementById("roomMeta").textContent  = `${g.subject} • ${g.category?.toUpperCase()} • ${g.language}`;
+
+  // Load members
+  loadMembers(g.members || []);
+
+  // Chat
+  listenGroupMessages(groupId, renderMessages);
+
+  // Polls listener
+  listenPolls();
+});
+
+async function loadMembers(uids) {
+  const el = document.getElementById("membersList");
+  el.innerHTML = "";
+  for (const uid of uids) {
+    const s = await getDoc(doc(db, "users", uid));
+    if (!s.exists()) continue;
+    const u = s.data();
+    el.innerHTML += `<div class="member-item">
+      <div class="avatar avatar-sm" style="background:linear-gradient(135deg,var(--violet),var(--sky))">${u.name[0]}</div>
+      <div><div class="member-name">${u.name}</div><div class="text-xs text-gray">${u.language==="hindi"?"🔵":"🟢"}</div></div>
+    </div>`;
+  }
+}
+
+function renderMessages(msgs) {
+  const area = document.getElementById("gcMessages");
+  if (!msgs.length) { area.innerHTML = `<div style="text-align:center;color:var(--gray);padding:32px">👋 Group mein message karo!</div>`; return; }
+  const myUid = auth.currentUser.uid;
+  area.innerHTML = msgs.map(m => {
+    const isSent = m.uid === myUid;
+    const time   = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}) : "";
+    let content = "";
+    if (m.type==="image") content = `<img src="${m.text}" style="max-width:200px;border-radius:10px;cursor:pointer" onclick="window.open('${m.text}','_blank')"/>`;
+    else if (m.type==="file") content = `<a href="${m.text}" target="_blank" style="color:inherit;display:flex;align-items:center;gap:6px">📎 File</a>`;
+    else content = escHtml(m.text);
+    return `<div class="msg-wrap ${isSent?"sent":"recv"}">
+      ${!isSent?`<div class="text-xs text-gray mb-4">${m.senderName}</div>`:""}
+      <div class="bubble">${content}</div>
+      <div class="msg-time">${time}</div>
+    </div>`;
+  }).join("");
+  area.scrollTop = area.scrollHeight;
+
+  // Update files tab
+  const files = msgs.filter(m => m.type==="image"||m.type==="file");
+  document.getElementById("filesList").innerHTML = files.map(f =>
+    f.type==="image"
+      ? `<div style="border:1.5px solid var(--border);border-radius:10px;overflow:hidden"><img src="${f.text}" style="width:100%;max-height:200px;object-fit:cover;cursor:pointer" onclick="window.open('${f.text}','_blank')"/><div style="padding:8px 12px;font-size:0.75rem;color:var(--gray)">${f.senderName}</div></div>`
+      : `<a href="${f.text}" target="_blank" style="display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid var(--border);border-radius:10px;text-decoration:none;color:var(--dark);font-weight:600">📎 <span>File by ${f.senderName}</span></a>`
+  ).join("");
+}
+
+window.sendGrpMsg = async function() {
+  const inp = document.getElementById("gcInput");
+  const t   = inp.value.trim(); if (!t) return;
+  inp.value = "";
+  await sendGroupMessage(groupId, t);
+};
+
+window.handleGroupFile = async function(input) {
+  const file = input.files[0]; if (!file) return;
+  await sendGroupFile(groupId, file);
+  input.value = "";
+};
+
+window.switchTab = function(name, el) {
+  document.querySelectorAll(".room-tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab-panel").forEach(t => t.classList.remove("active"));
+  el.classList.add("active");
+  document.getElementById("tab-"+name).classList.add("active");
+};
+
+window.handleGenQuiz = async function() {
+  const btn = document.getElementById("genQuizBtn");
+  btn.textContent = "⏳ Generating..."; btn.disabled = true;
+  try {
+    const questions = await generateQuiz({ subject: myProfile.subject, category: myProfile.category, language: myProfile.language, numQuestions: parseInt(document.getElementById("qCount").value) });
+    curQuiz   = questions;
+    curQuizId = await saveGroupQuiz(groupId, questions);
+    answers   = {};
+    renderQuiz(questions);
+    listenToLeaderboard(groupId, curQuizId, renderLeader);
+  } catch(e) { alert("Quiz generate karne mein error: " + e.message); }
+  btn.textContent = "Generate Quiz for Group"; btn.disabled = false;
+};
+
+function renderQuiz(qs) {
+  document.getElementById("quizArea").innerHTML = qs.map((q, qi) => `
+    <div class="card" style="margin-bottom:14px">
+      <div class="quiz-question">Q${qi+1}: ${q.question}</div>
+      <div class="quiz-options">
+        ${q.options.map((o, oi) => `<button class="quiz-option" id="qopt_${qi}_${oi}" onclick="selectAns(${qi},${oi})">${o}</button>`).join("")}
+      </div>
+    </div>
+  `).join("") + `<button class="btn btn-primary" onclick="submitQuiz()">Submit Answers 🚀</button>`;
+}
+
+window.selectAns = function(qi, oi) {
+  answers[qi] = oi;
+  for (let i = 0; i < 4; i++) {
+    const b = document.getElementById(`qopt_${qi}_${i}`);
+    if (b) { b.classList.remove("selected"); }
+  }
+  document.getElementById(`qopt_${qi}_${oi}`)?.classList.add("selected");
+};
+
+window.submitQuiz = async function() {
+  let score = 0;
+  curQuiz.forEach((q, qi) => { if (answers[qi] === q.correct) score++; });
+  await submitQuizScore(groupId, curQuizId, score, curQuiz.length);
+
+  // Show correct/wrong
+  curQuiz.forEach((q, qi) => {
+    q.options.forEach((_, oi) => {
+      const b = document.getElementById(`qopt_${qi}_${oi}`);
+      if (!b) return;
+      b.disabled = true;
+      if (oi === q.correct)       b.classList.add("correct");
+      else if (oi === answers[qi]) b.classList.add("wrong");
+    });
+  });
+
+  document.getElementById("leaderSection").style.display = "block";
+  alert(`Score: ${score}/${curQuiz.length} 🎉`);
+};
+
+function renderLeader(entries) {
+  const el = document.getElementById("leaderList");
+  el.innerHTML = entries.map((e, i) => `
+    <div class="leaderboard-item">
+      <div class="leaderboard-rank rank-${i<3?i+1:"other"}">${i<3?["🥇","🥈","🥉"][i]:i+1}</div>
+      <div class="avatar avatar-sm" style="background:linear-gradient(135deg,var(--violet),var(--sky))">${e.name[0]}</div>
+      <span style="font-weight:700">${e.name}</span>
+      <div class="leaderboard-score">${e.score}/${e.total}</div>
+    </div>
+  `).join("");
+}
+
+function listenPolls() {
+  const q = query(collection(db, "groups", groupId, "polls"), orderBy("createdAt","desc"));
+  onSnapshot(q, (snap) => {
+    renderPolls(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
+
+function renderPolls(polls) {
+  document.getElementById("pollsList").innerHTML = polls.map(p => {
+    const opts = Object.entries(p.options||{});
+    const totalVotes = opts.reduce((a,[,o]) => a + (o.votes?.length||0), 0);
+    return `<div class="poll-box">
+      <div style="font-weight:700;margin-bottom:12px">${p.question}</div>
+      ${opts.map(([idx, o]) => {
+        const votes = o.votes?.length || 0;
+        const pct   = totalVotes ? Math.round((votes/totalVotes)*100) : 0;
+        return `<div class="poll-opt" onclick="handleVote('${p.id}',${idx})">
+          <span style="font-weight:600;min-width:80px">${o.text}</span>
+          <div class="poll-bar-wrap"><div class="poll-bar" style="width:${pct}%"></div></div>
+          <span style="font-size:0.75rem;font-weight:700;color:var(--violet);min-width:36px;text-align:right">${pct}%</span>
+        </div>`;
+      }).join("")}
+      <div class="text-xs text-gray mt-4">${totalVotes} total votes</div>
+    </div>`;
+  }).join("");
+}
+
+window.handleCreatePoll = async function() {
+  const q   = document.getElementById("pollQ").value.trim();
+  const o1  = document.getElementById("pollO1").value.trim();
+  const o2  = document.getElementById("pollO2").value.trim();
+  const o3  = document.getElementById("pollO3").value.trim();
+  const opts = [o1, o2, o3].filter(Boolean);
+  if (!q || opts.length < 2) { alert("Question aur kam se kam 2 options bharo!"); return; }
+  await createPoll(groupId, q, opts);
+  ["pollQ","pollO1","pollO2","pollO3"].forEach(id => document.getElementById(id).value = "");
+};
+
+window.handleVote = async function(pollId, optIdx) {
+  await votePoll(groupId, pollId, optIdx);
+};
+
+function escHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+</script>
+</body>
+</html>
