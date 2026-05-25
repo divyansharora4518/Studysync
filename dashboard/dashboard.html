@@ -136,7 +136,7 @@ window.openPastPapers = function() {
   const overlay = document.getElementById('pastPapersOverlay');
   const frame   = document.getElementById('pastPapersFrame');
   if (!frame.getAttribute('data-loaded')) {
-    frame.src = '../past-papers/past-paper.html';
+    frame.src = '../past-paper.html';
     frame.setAttribute('data-loaded', '1');
   }
   overlay.style.display = 'block';
